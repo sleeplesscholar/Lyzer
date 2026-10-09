@@ -1,7 +1,7 @@
 import io
 import json
 import logging
-from typing import Dict, Any
+from typing import Dict, Any, List
 
 from fastapi import FastAPI, UploadFile, File, Form, HTTPException, status
 from fastapi.middleware.cors import CORSMiddleware
@@ -10,6 +10,7 @@ import ollama
 
 from schemas.output_format import CircuitAnalysisResponse
 from prompts.circuit_rules import SYSTEM_PROMPT
+from prompts.few_shot_examples import RESISTOR_IMG, LED_IMG
 
 # Set up logging for server-side error tracking
 logging.basicConfig(level=logging.INFO)
@@ -112,18 +113,51 @@ async def analyze_circuit(
     image_bytes = await validate_image_file(image)
     cleaned_description = sanitize_description(description)
 
-    # 2. Execute Inference via Ollama
+    # 2. Build Multimodal Conversation Payload with Reference Grounding
+    messages: List[Dict[str, Any]] = [
+        {"role": "system", "content": SYSTEM_PROMPT}
+    ]
+
+    # Inject Resistor Reference Image if loaded
+    if RESISTOR_IMG:
+        messages.extend([
+            {
+                "role": "user",
+                "content": "Reference Example A: This visual pattern (axial cylinder, wire leads, color bands) is a Resistor.",
+                "images": [RESISTOR_IMG]
+            },
+            {
+                "role": "assistant",
+                "content": "Acknowledged. I will recognize axial bodies with color bands as Resistors."
+            }
+        ])
+
+    # Inject LED Reference Image if loaded
+    if LED_IMG:
+        messages.extend([
+            {
+                "role": "user",
+                "content": "Reference Example B: This visual pattern (colored plastic dome with two leads) is an LED.",
+                "images": [LED_IMG]
+            },
+            {
+                "role": "assistant",
+                "content": "Acknowledged. I will recognize colored plastic domes as LEDs."
+            }
+        ])
+
+    # Target Circuit Image & Query
+    messages.append({
+        "role": "user",
+        "content": f"User Circuit Notes: {cleaned_description}",
+        "images": [image_bytes]
+    })
+
+    # 3. Execute Inference via Ollama
     try:
         response = ollama.chat(
             model=MODEL_NAME,
-            messages=[
-                {"role": "system", "content": SYSTEM_PROMPT},
-                {
-                    "role": "user",
-                    "content": f"User Circuit Notes: {cleaned_description}",
-                    "images": [image_bytes]
-                }
-            ],
+            messages=messages,
             format=CircuitAnalysisResponse.model_json_schema()
         )
 
@@ -140,7 +174,7 @@ async def analyze_circuit(
             detail="Could not reach local Ollama inference service. Ensure Ollama is running."
         )
 
-    # 3. Parse and Validate Model Output
+    # 4. Parse and Validate Model Output
     try:
         raw_json = response["message"]["content"].strip()
         logger.info(f"RAW MODEL OUTPUT:\n{raw_json}")

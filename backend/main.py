@@ -95,3 +95,69 @@ def sanitize_description(description: str) -> str:
             detail="Circuit description exceeds the maximum length of 2000 characters."
         )
     return cleaned if cleaned else "Check this circuit setup for safety and wiring issues."
+
+@app.get("/")
+def read_root() -> Dict[str, str]:
+    return {"status": "online", "service": "CircuitMentor Engine"}
+
+
+@app.post("/api/analyze", response_model=CircuitAnalysisResponse)
+async def analyze_circuit(
+    image: UploadFile = File(...),
+    description: str = Form(default="Check this circuit setup for safety and wiring issues.")
+):
+    # Execute Input Validation
+    image_bytes = await validate_image_file(image)
+    cleaned_description = sanitize_description(description)
+
+    # Execute Inference via Ollama
+    try:
+        response = ollama.chat(
+            model=MODEL_NAME,
+            messages=[
+                {"role": "system", "content": SYSTEM_PROMPT},
+                {
+                    "role": "user",
+                    "content": f"User Circuit Notes: {cleaned_description}",
+                    "images": [image_bytes]
+                }
+            ],
+            format=CircuitAnalysisResponse.model_json_schema()
+        )
+
+    except ollama.ResponseError as e:
+        logger.error(f"Ollama response error: {str(e)}")
+        raise HTTPException(
+            status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
+            detail=f"AI model service error: {e.error}"
+        )
+    except Exception as e:
+        logger.error(f"Failed to connect to Ollama daemon: {str(e)}")
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="Could not reach local Ollama inference service. Ensure Ollama is running."
+        )
+
+    # Parse and Validate Model Output
+    try:
+        raw_json = response["message"]["content"]
+        parsed_data = json.loads(raw_json)
+        return CircuitAnalysisResponse(**parsed_data)
+
+    except (json.JSONDecodeError, KeyError) as e:
+        logger.error(f"Model returned invalid JSON: {str(e)}")
+        raise HTTPException(
+            status_code=status.HTTP_502_BAD_GATEWAY,
+            detail="Model output failed structured JSON schema verification."
+        )
+    except Exception as e:
+        logger.error(f"Schema mapping error: {str(e)}")
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="Failed to format analysis response into schema."
+        )
+
+
+if __name__ == "__main__":
+    import uvicorn
+    uvicorn.run("main:app", host="127.0.0.1", port=8000, reload=True)

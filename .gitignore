@@ -1,1 +1,49 @@
+
+# ==========================================
+# Python & Backend (.venv / compiled files)
+# ==========================================
+backend/.venv/
 .venv/
+venv/
+ENV/
+env/
+__pycache__/
+*.py[cod]
+*$py.class
+.pytest_cache/
+.coverage
+htmlcov/
+*.log
+
+# ==========================================
+# Node.js & Frontend (ui/)
+# ==========================================
+ui/node_modules/
+node_modules/
+ui/dist/
+ui/build/
+.npm
+*.log
+
+# ==========================================
+# Environment Variables & Local Secrets
+# ==========================================
+.env
+.env.local
+.env.*.local
+*.env
+
+# ==========================================
+# IDE & System Files
+# ==========================================
+.vscode/
+.idea/
+*.swp
+*.swo
+.DS_Store
+Thumbs.db
+
+# ==========================================
+# Local Test Artifacts
+# ==========================================
+tests/sample_images/

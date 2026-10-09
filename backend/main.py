@@ -12,6 +12,7 @@ import ollama
 from schemas.output_format import CircuitAnalysisResponse
 from prompts.circuit_rules import SYSTEM_PROMPT
 from prompts.few_shot_examples import RESISTOR_IMG, LED_IMG
+from services.safety_rules import evaluate_electrical_rules
 
 # Set up logging for server-side error tracking
 logging.basicConfig(level=logging.INFO)
@@ -20,7 +21,7 @@ logger = logging.getLogger("CircuitMentor")
 app = FastAPI(
     title="CircuitMentor API",
     description="Backend service for multimodal breadboard and schematic analysis.",
-    version="0.1.0"
+    version="0.2.0"
 )
 
 app.add_middleware(
@@ -101,19 +102,38 @@ def sanitize_description(description: str) -> str:
 
 def sanitize_model_payload(parsed_data: Dict[str, Any]) -> Dict[str, Any]:
     """
-    Defensively inspects and patches missing schema keys returned by the LLM
-    before handing the dictionary to Pydantic for validation.
+    Defensively inspects and patches missing schema keys returned by the LLM,
+    and runs deterministic electrical safety engine rules before Pydantic validation.
     """
-    # 1. Ensure components_detected exists and is a list
+    # 1. Guarantee top-level required fields against model truncation
+    if not parsed_data.get("circuit_type"):
+        parsed_data["circuit_type"] = "Breadboard Prototype Circuit"
+
+    if not parsed_data.get("summary"):
+        parsed_data["summary"] = (
+            "Visual inspection completed. Partial analysis generated based on detected components."
+        )
+
+    if not parsed_data.get("overall_safety"):
+        parsed_data["overall_safety"] = "SAFE"
+
+    # 2. Ensure components_detected exists and patch component/bounding_box fields
     components = parsed_data.get("components_detected")
     if isinstance(components, list):
         for comp in components:
             if isinstance(comp, dict):
+                # Guarantee name string fallback
+                if "name" not in comp or not comp["name"]:
+                    comp["name"] = "Unknown Component"
+
+                # Guarantee location_description string fallback
+                if "location_description" not in comp or not comp["location_description"]:
+                    comp["location_description"] = "Location non-determinable due to partial image crop or model truncation."
+
                 # Ensure confidence field exists (fallback to default 0.70)
                 if "confidence" not in comp or comp["confidence"] is None:
                     comp["confidence"] = 0.70
                 else:
-                    # Clamp confidence float to [0.0, 1.0]
                     try:
                         comp["confidence"] = max(0.0, min(1.0, float(comp["confidence"])))
                     except (ValueError, TypeError):
@@ -123,13 +143,51 @@ def sanitize_model_payload(parsed_data: Dict[str, Any]) -> Dict[str, Any]:
                 if "component_id" not in comp or not comp["component_id"]:
                     comp["component_id"] = f"COMP_{id(comp) % 1000}"
 
-    # 2. Ensure telemetry block defaults exist
+                # Patch incomplete or truncated bounding boxes
+                bbox = comp.get("bounding_box")
+                if not isinstance(bbox, dict):
+                    comp["bounding_box"] = {"ymin": 0.0, "xmin": 0.0, "ymax": 0.0, "xmax": 0.0}
+                else:
+                    for axis in ["ymin", "xmin", "ymax", "xmax"]:
+                        if axis not in bbox or bbox[axis] is None:
+                            bbox[axis] = 0.0
+                        else:
+                            try:
+                                bbox[axis] = max(0.0, min(1.0, float(bbox[axis])))
+                            except (ValueError, TypeError):
+                                bbox[axis] = 0.0
+    else:
+        parsed_data["components_detected"] = []
+
+    # 3. Ensure telemetry block defaults exist
     if "telemetry" not in parsed_data or not isinstance(parsed_data["telemetry"], dict):
         parsed_data["telemetry"] = {
             "frame_status": "OK",
             "requires_power_kill": False,
             "stable_inspection": True
         }
+
+    # 4. Ensure list structures exist
+    if "hazards_and_violations" not in parsed_data or not isinstance(parsed_data["hazards_and_violations"], list):
+        parsed_data["hazards_and_violations"] = []
+    if "recommendations" not in parsed_data or not isinstance(parsed_data["recommendations"], list):
+        parsed_data["recommendations"] = []
+
+    # 5. Correct top-level topology hallucinations (e.g., non-existent transistors)
+    detected_names = [
+        c.get("name", "").lower() 
+        for c in parsed_data.get("components_detected", []) 
+        if isinstance(c, dict)
+    ]
+    has_active_silicon = any(
+        term in " ".join(detected_names) 
+        for term in ["transistor", "ic", "op-amp", "mosfet", "timer"]
+    )
+    if not has_active_silicon and "driver" in parsed_data.get("circuit_type", "").lower():
+        parsed_data["circuit_type"] = "Simple Passive Circuit"
+
+    # 6. Apply Deterministic Electrical Safety Engine Rules
+    parsed_data = evaluate_electrical_rules(parsed_data)
 
     return parsed_data
 
@@ -190,9 +248,9 @@ async def analyze_circuit(
         response = await ollama_client.chat(
             model=MODEL_NAME,
             messages=messages,
-            format=CircuitAnalysisResponse.model_json_schema(),
+            format="json",
             options={
-                "num_predict": 2048,
+                "num_predict": 3072,  # Increased token budget to prevent early truncation
                 "temperature": 0.2,
             }
         )
@@ -212,7 +270,15 @@ async def analyze_circuit(
 
     # 4. Parse and Validate Model Output
     try:
-        raw_json = response["message"]["content"].strip()
+        raw_content = response.get("message", {}).get("content", "")
+        if not raw_content or not raw_content.strip():
+            logger.error("Ollama returned an empty response string.")
+            raise HTTPException(
+                status_code=status.HTTP_502_BAD_GATEWAY,
+                detail="Model returned an empty response. Ensure Ollama daemon is active."
+            )
+
+        raw_json = raw_content.strip()
         logger.info(f"RAW MODEL OUTPUT:\n{raw_json}")
 
         if raw_json.startswith("```json"):
@@ -231,7 +297,7 @@ async def analyze_circuit(
             repaired_str = repair_json(raw_json)
             parsed_data = json.loads(repaired_str)
 
-        # Sanitize and inject missing component fields before schema mapping
+        # Sanitize, patch missing fields, and evaluate safety rules
         sanitized_data = sanitize_model_payload(parsed_data)
 
         return CircuitAnalysisResponse(**sanitized_data)
@@ -248,6 +314,71 @@ async def analyze_circuit(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail=f"Schema mapping error: {str(e)}"
         )
+
+
+@app.post("/api/verify", response_model=CircuitAnalysisResponse)
+async def verify_schematic_against_breadboard(
+    schematic_image: UploadFile = File(...),
+    breadboard_image: UploadFile = File(...),
+    description: str = Form(default="Verify if the physical breadboard setup matches the schematic diagram.")
+):
+    """
+    Cross-checks a physical breadboard setup against a reference schematic diagram.
+    """
+    schematic_bytes = await validate_image_file(schematic_image)
+    breadboard_bytes = await validate_image_file(breadboard_image)
+    cleaned_description = sanitize_description(description)
+
+    messages: List[Dict[str, Any]] = [
+        {"role": "system", "content": SYSTEM_PROMPT},
+        {
+            "role": "user",
+            "content": f"User Verification Task: {cleaned_description}\nImage 1 is the Reference Schematic. Image 2 is the Physical Breadboard Build. Compare the topology and report any missing, incorrectly placed, or unlisted components.",
+            "images": [schematic_bytes, breadboard_bytes]
+        }
+    ]
+
+    try:
+        response = await ollama_client.chat(
+            model=MODEL_NAME,
+            messages=messages,
+            format="json",
+            options={
+                "num_predict": 3072,
+                "temperature": 0.2,
+            }
+        )
+    except Exception as e:
+        logger.error(f"Failed during dual-image verification: {str(e)}")
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="Error during schematic vs breadboard verification."
+        )
+
+    raw_content = response.get("message", {}).get("content", "").strip()
+    if not raw_content:
+        raise HTTPException(
+            status_code=status.HTTP_502_BAD_GATEWAY,
+            detail="Model returned an empty response during dual-image verification."
+        )
+
+    if raw_content.startswith("```json"):
+        raw_content = raw_content[7:]
+    elif raw_content.startswith("```"):
+        raw_content = raw_content[3:]
+    if raw_content.endswith("```"):
+        raw_content = raw_content[:-3]
+    
+    raw_content = raw_content.strip()
+
+    try:
+        parsed_data = json.loads(raw_content)
+    except json.JSONDecodeError:
+        repaired_str = repair_json(raw_content)
+        parsed_data = json.loads(repaired_str)
+
+    sanitized_data = sanitize_model_payload(parsed_data)
+    return CircuitAnalysisResponse(**sanitized_data)
 
 
 if __name__ == "__main__":

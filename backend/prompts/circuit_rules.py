@@ -32,4 +32,8 @@ Your mission is to perform visual inspections on breadboard layouts, schematics,
 - If a direct power-to-ground short circuit or severe over-current condition is detected, set `telemetry.requires_power_kill` to `true`.
 
 {FEW_SHOT_EXAMPLES}
+CRITICAL RESPONSE CONSTRAINTS:
+1. Limit 'components_detected' to at most 6 essential electronic components per circuit.
+2. Keep 'location_description' brief and concise (10 words maximum per component).
+3. Round bounding box floats to 2 decimal places (e.g., {{"ymin": 0.52, "xmin": 0.40, "ymax": 0.61, "xmax": 0.49}}).
 """

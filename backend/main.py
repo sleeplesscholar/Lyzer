@@ -34,6 +34,7 @@ MAX_FILE_SIZE_MB = 10
 MAX_FILE_SIZE_BYTES = MAX_FILE_SIZE_MB * 1024 * 1024
 ALLOWED_MIME_TYPES = {"image/jpeg", "image/png", "image/webp"}
 
+
 async def validate_image_file(image: UploadFile) -> bytes:
     """
     Validates uploaded image MIME type, payload size, and image integrity.
@@ -96,6 +97,7 @@ def sanitize_description(description: str) -> str:
         )
     return cleaned if cleaned else "Check this circuit setup for safety and wiring issues."
 
+
 @app.get("/")
 def read_root() -> Dict[str, str]:
     return {"status": "online", "service": "CircuitMentor Engine"}
@@ -106,11 +108,11 @@ async def analyze_circuit(
     image: UploadFile = File(...),
     description: str = Form(default="Check this circuit setup for safety and wiring issues.")
 ):
-    # Execute Input Validation
+    # 1. Execute Input Validation
     image_bytes = await validate_image_file(image)
     cleaned_description = sanitize_description(description)
 
-    # Execute Inference via Ollama
+    # 2. Execute Inference via Ollama
     try:
         response = ollama.chat(
             model=MODEL_NAME,
@@ -138,9 +140,21 @@ async def analyze_circuit(
             detail="Could not reach local Ollama inference service. Ensure Ollama is running."
         )
 
-    # Parse and Validate Model Output
+    # 3. Parse and Validate Model Output
     try:
-        raw_json = response["message"]["content"]
+        raw_json = response["message"]["content"].strip()
+        logger.info(f"RAW MODEL OUTPUT:\n{raw_json}")
+
+        # Clean markdown wrappers if returned by Ollama
+        if raw_json.startswith("```json"):
+            raw_json = raw_json[7:]
+        elif raw_json.startswith("```"):
+            raw_json = raw_json[3:]
+        if raw_json.endswith("```"):
+            raw_json = raw_json[:-3]
+        
+        raw_json = raw_json.strip()
+
         parsed_data = json.loads(raw_json)
         return CircuitAnalysisResponse(**parsed_data)
 
@@ -148,17 +162,16 @@ async def analyze_circuit(
         logger.error(f"Model returned invalid JSON: {str(e)}")
         raise HTTPException(
             status_code=status.HTTP_502_BAD_GATEWAY,
-            detail="Model output failed structured JSON schema verification."
+            detail="Model output failed JSON parsing."
         )
     except Exception as e:
-        logger.error(f"Schema mapping error: {str(e)}")
+        logger.error(f"Schema validation error: {str(e)}")
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail="Failed to format analysis response into schema."
+            detail=f"Schema mapping error: {str(e)}"
         )
 
 
 if __name__ == "__main__":
     import uvicorn
     uvicorn.run("main:app", host="127.0.0.1", port=8000, reload=True)
-

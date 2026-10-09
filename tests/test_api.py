@@ -15,7 +15,7 @@ def run_test():
     
     with open(SAMPLE_IMAGE_PATH, "rb") as img_file:
         files = {"image": ("test_circuit.jpg", img_file, "image/jpeg")}
-        data = {"description": "Breadboard setup with an op-amp and power rails. Check for short circuits."}
+        data = {"description": "Determine what electrical components the given breadboard circuit has."}
         
         response = requests.post(API_URL, files=files, data=data)
 

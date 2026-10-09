@@ -6,6 +6,7 @@ from typing import Dict, Any, List
 from fastapi import FastAPI, UploadFile, File, Form, HTTPException, status
 from fastapi.middleware.cors import CORSMiddleware
 from PIL import Image, UnidentifiedImageError
+from json_repair import repair_json
 import ollama
 
 from schemas.output_format import CircuitAnalysisResponse
@@ -35,19 +36,20 @@ MAX_FILE_SIZE_MB = 10
 MAX_FILE_SIZE_BYTES = MAX_FILE_SIZE_MB * 1024 * 1024
 ALLOWED_MIME_TYPES = {"image/jpeg", "image/png", "image/webp"}
 
+# Initialize asynchronous Ollama client
+ollama_client = ollama.AsyncClient()
+
 
 async def validate_image_file(image: UploadFile) -> bytes:
     """
     Validates uploaded image MIME type, payload size, and image integrity.
     """
-    # 1. Check MIME type header
     if image.content_type not in ALLOWED_MIME_TYPES:
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
             detail=f"Unsupported file type '{image.content_type}'. Allowed types: JPEG, PNG, WEBP."
         )
 
-    # 2. Read bytes and check payload size
     contents = await image.read()
     if len(contents) == 0:
         raise HTTPException(
@@ -61,12 +63,10 @@ async def validate_image_file(image: UploadFile) -> bytes:
             detail=f"File size exceeds maximum threshold of {MAX_FILE_SIZE_MB}MB."
         )
 
-    # 3. Verify image file integrity via Pillow
     try:
         pil_image = Image.open(io.BytesIO(contents))
-        pil_image.verify()  # Verifies file header without decoding full image
+        pil_image.verify()
         
-        # Re-open after verify() to process bytes
         pil_image = Image.open(io.BytesIO(contents)).convert("RGB")
         
         img_byte_arr = io.BytesIO()
@@ -99,6 +99,41 @@ def sanitize_description(description: str) -> str:
     return cleaned if cleaned else "Check this circuit setup for safety and wiring issues."
 
 
+def sanitize_model_payload(parsed_data: Dict[str, Any]) -> Dict[str, Any]:
+    """
+    Defensively inspects and patches missing schema keys returned by the LLM
+    before handing the dictionary to Pydantic for validation.
+    """
+    # 1. Ensure components_detected exists and is a list
+    components = parsed_data.get("components_detected")
+    if isinstance(components, list):
+        for comp in components:
+            if isinstance(comp, dict):
+                # Ensure confidence field exists (fallback to default 0.70)
+                if "confidence" not in comp or comp["confidence"] is None:
+                    comp["confidence"] = 0.70
+                else:
+                    # Clamp confidence float to [0.0, 1.0]
+                    try:
+                        comp["confidence"] = max(0.0, min(1.0, float(comp["confidence"])))
+                    except (ValueError, TypeError):
+                        comp["confidence"] = 0.70
+
+                # Guarantee component_id string fallback
+                if "component_id" not in comp or not comp["component_id"]:
+                    comp["component_id"] = f"COMP_{id(comp) % 1000}"
+
+    # 2. Ensure telemetry block defaults exist
+    if "telemetry" not in parsed_data or not isinstance(parsed_data["telemetry"], dict):
+        parsed_data["telemetry"] = {
+            "frame_status": "OK",
+            "requires_power_kill": False,
+            "stable_inspection": True
+        }
+
+    return parsed_data
+
+
 @app.get("/")
 def read_root() -> Dict[str, str]:
     return {"status": "online", "service": "CircuitMentor Engine"}
@@ -118,7 +153,6 @@ async def analyze_circuit(
         {"role": "system", "content": SYSTEM_PROMPT}
     ]
 
-    # Inject Resistor Reference Image if loaded
     if RESISTOR_IMG:
         messages.extend([
             {
@@ -132,7 +166,6 @@ async def analyze_circuit(
             }
         ])
 
-    # Inject LED Reference Image if loaded
     if LED_IMG:
         messages.extend([
             {
@@ -146,19 +179,22 @@ async def analyze_circuit(
             }
         ])
 
-    # Target Circuit Image & Query
     messages.append({
         "role": "user",
         "content": f"User Circuit Notes: {cleaned_description}",
         "images": [image_bytes]
     })
 
-    # 3. Execute Inference via Ollama
+    # 3. Execute Async Inference via Ollama
     try:
-        response = ollama.chat(
+        response = await ollama_client.chat(
             model=MODEL_NAME,
             messages=messages,
-            format=CircuitAnalysisResponse.model_json_schema()
+            format=CircuitAnalysisResponse.model_json_schema(),
+            options={
+                "num_predict": 2048,
+                "temperature": 0.2,
+            }
         )
 
     except ollama.ResponseError as e:
@@ -179,7 +215,6 @@ async def analyze_circuit(
         raw_json = response["message"]["content"].strip()
         logger.info(f"RAW MODEL OUTPUT:\n{raw_json}")
 
-        # Clean markdown wrappers if returned by Ollama
         if raw_json.startswith("```json"):
             raw_json = raw_json[7:]
         elif raw_json.startswith("```"):
@@ -189,14 +224,23 @@ async def analyze_circuit(
         
         raw_json = raw_json.strip()
 
-        parsed_data = json.loads(raw_json)
-        return CircuitAnalysisResponse(**parsed_data)
+        try:
+            parsed_data = json.loads(raw_json)
+        except json.JSONDecodeError as decode_err:
+            logger.warning(f"Standard JSON decode failed: {str(decode_err)}. Attempting repair_json fallback...")
+            repaired_str = repair_json(raw_json)
+            parsed_data = json.loads(repaired_str)
+
+        # Sanitize and inject missing component fields before schema mapping
+        sanitized_data = sanitize_model_payload(parsed_data)
+
+        return CircuitAnalysisResponse(**sanitized_data)
 
     except (json.JSONDecodeError, KeyError) as e:
         logger.error(f"Model returned invalid JSON: {str(e)}")
         raise HTTPException(
             status_code=status.HTTP_502_BAD_GATEWAY,
-            detail="Model output failed JSON parsing."
+            detail="Model output failed JSON parsing after repair attempt."
         )
     except Exception as e:
         logger.error(f"Schema validation error: {str(e)}")

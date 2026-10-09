@@ -161,3 +161,31 @@ async def analyze_circuit(
 if __name__ == "__main__":
     import uvicorn
     uvicorn.run("main:app", host="127.0.0.1", port=8000, reload=True)
+
+
+class BoundingBox(BaseModel):
+    """Normalized coordinates [0.0 - 1.0] for live overlay bounding boxes."""
+    ymin: float = Field(..., ge=0.0, le=1.0, description="Top edge ratio")
+    xmin: float = Field(..., ge=0.0, le=1.0, description="Left edge ratio")
+    ymax: float = Field(..., ge=0.0, le=1.0, description="Bottom edge ratio")
+    xmax: float = Field(..., ge=0.0, le=1.0, description="Right edge ratio")
+
+
+class DetectedComponent(BaseModel):
+    """Represents a discrete hardware component identified in the frame."""
+    component_id: str = Field(..., description="Unique identifier for tracking across frames (e.g., R1, IC1, LED_RED)")
+    name: str = Field(..., description="Component label (e.g., LM358 Op-Amp, 220 Ohm Resistor)")
+    location_description: str = Field(..., description="Human-readable pin/rail placement (e.g., Pins 1-3, Rail A)")
+    bounding_box: Optional[BoundingBox] = Field(None, description="Spatial coordinates for live bounding overlays")
+    confidence: float = Field(..., ge=0.0, le=1.0, description="Model certainty score for identification")
+
+
+class CircuitHazard(BaseModel):
+    """Detailed record of a safety hazard or incorrect wiring setup."""
+    hazard_id: str = Field(..., description="Unique issue code (e.g., HAZ_001)")
+    category: HazardCategory = Field(..., description="Specific failure category")
+    severity: RiskLevel = Field(..., description="Risk level associated with this hazard")
+    title: str = Field(..., description="Short hazard heading (e.g., Direct VCC to GND Short)")
+    explanation: str = Field(..., description="Engineering explanation of why this connection is dangerous")
+    affected_components: List[str] = Field(default_factory=list, description="IDs or names of involved components")
+    bounding_box: Optional[BoundingBox] = Field(None, description="Spatial location of the hazard on the breadboard")

@@ -12,6 +12,9 @@ def load_reference_image(filename: str) -> bytes:
 # Load reference image bytes for visual ground-truth prompting
 RESISTOR_IMG = load_reference_image("test_resistor.jpg")
 LED_IMG = load_reference_image("test_led.jpg")
+ELECTROLYTIC_CAP_IMG = load_reference_image("test_electrolytic_capacitor.jpg")
+CERAMIC_CAP_IMG = load_reference_image("test_ceramic_capacitor.jpg")
+POTENTIOMETER_IMG = load_reference_image("test_potentiometer.jpg")
 
 FEW_SHOT_EXAMPLES = """
 ### DISCRETE BREADBOARD COMPONENT IDENTIFICATION EXAMPLES:
@@ -19,29 +22,34 @@ FEW_SHOT_EXAMPLES = """
 Use these reference patterns to identify physical components plugged directly into breadboard tie-points:
 
 1. **Resistor**: Small cylindrical body with four or five color code bands and axial wire leads.
-   - Example name: "Resistor" or "Current-Limiting Resistor"
-   - Do NOT guess resistance value unless color bands are crisp and unambiguous.
+- Example name: "Resistor" or "Current-Limiting Resistor"
+- Do NOT guess resistance value unless color bands are crisp and unambiguous.
 
 2. **LED (Light Emitting Diode)**: Small 3mm or 5mm clear or colored plastic dome with two leads (anode/cathode).
-   - Example name: "LED" or "Indicator LED"
-   - NOTE: Determine color ONLY from the plastic dome lens itself, NEVER from nearby knobs, wire insulation, or test leads. If color is ambiguous, use "LED".
+- Example name: "LED" or "Indicator LED"
+- NOTE: Determine color ONLY from the plastic dome lens itself, NEVER from nearby knobs, wire insulation, or test leads. If color is ambiguous, use "LED".
 
-3. **Capacitor**:
-   - *Electrolytic*: Cylindrical can (often black/blue) with a stripe indicating the negative (-) lead.
-   - *Ceramic Disc*: Small flat yellow/orange disc with two parallel leads.
-   - Example name: "Electrolytic Capacitor" or "Ceramic Capacitor"
+3. **Electrolytic Capacitor**: Cylindrical metal/plastic can (typically black, blue, or silver) with a distinct vertical stripe indicating the negative (-) lead, standing vertically or lying horizontally.
+- Example name: "Electrolytic Capacitor"
+- Check orientation and polarity relative to breadboard power rails where visible.
 
-4. **Diode / Zener Diode**: Small black or glass cylinder with a single silver or black cathode band near one end.
-   - Example name: "Rectifier Diode" or "Signal Diode"
+4. **Ceramic Disc Capacitor**: Small, thin, flat yellow/orange disc (or small bulbous coin shape) with two parallel wire leads.
+- Example name: "Ceramic Capacitor" or "Ceramic Disc Capacitor"
 
-5. **Transistor / Voltage Regulator**: Small 3-pin component with a flat front and curved back (TO-92 package) or a metal tab (TO-220 package).
-   - Example name: "NPN Transistor" or "Voltage Regulator"
+5. **Potentiometer**: Variable resistor with a rotating knob or thumbwheel, typically housed in a blue, black, or metallic casing with 3 terminal pins plugged into adjacent breadboard rows.
+- Example name: "Potentiometer" or "Trimmer Potentiometer"
 
-6. **Integrated Circuit (DIP IC)**: Rectangular black plastic package with pins on two parallel sides straddling the center breadboard divider channel.
-   - Example name: "555 Timer IC" or "Dual Op-Amp IC"
+6. **Diode / Zener Diode**: Small black or glass cylinder with a single silver or black cathode band near one end.
+- Example name: "Rectifier Diode" or "Signal Diode"
 
-7. **Jumper Wires**: Flexible insulated solid-core wires bridging two breadboard tie-points or power rails.
-   - Example name: "Jumper Wire"
+7. **Transistor / Voltage Regulator**: Small 3-pin component with a flat front and curved back (TO-92 package) or a metal tab (TO-220 package).
+- Example name: "NPN Transistor" or "Voltage Regulator"
+
+8. **Integrated Circuit (DIP IC)**: Rectangular black plastic package with pins on two parallel sides straddling the center breadboard divider channel.
+- Example name: "555 Timer IC" or "Dual Op-Amp IC"
+
+9. **Jumper Wires**: Flexible insulated solid-core wires bridging two breadboard tie-points or power rails.
+- Example name: "Jumper Wire"
 
 ---
 
@@ -65,9 +73,23 @@ Use these reference patterns to identify physical components plugged directly in
   {
     "component_id": "C1",
     "name": "Electrolytic Capacitor",
-    "location_description": "Spanning power and ground rail near top left rail",
+    "location_description": "Spanning power rail and terminal row 10",
     "bounding_box": {"ymin": 0.20, "xmin": 0.15, "ymax": 0.35, "xmax": 0.25},
-    "confidence": 0.82
+    "confidence": 0.85
+  },
+  {
+    "component_id": "C2",
+    "name": "Ceramic Capacitor",
+    "location_description": "Small orange disc connected between row 12 and ground rail",
+    "bounding_box": {"ymin": 0.30, "xmin": 0.28, "ymax": 0.38, "xmax": 0.33},
+    "confidence": 0.89
+  },
+  {
+    "component_id": "RV1",
+    "name": "Potentiometer",
+    "location_description": "3-pin variable resistor with dial spanning terminal rows 20 to 22",
+    "bounding_box": {"ymin": 0.60, "xmin": 0.50, "ymax": 0.75, "xmax": 0.65},
+    "confidence": 0.92
   },
   {
     "component_id": "IC1",

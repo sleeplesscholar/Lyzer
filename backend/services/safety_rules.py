@@ -35,7 +35,7 @@ def evaluate_electrical_rules(parsed_payload: Dict[str, Any]) -> Dict[str, Any]:
         if not already_reported:
             hazards.append({
                 "hazard_id": "HZ_MISSING_RESISTOR",
-                "category": "OVERCURRENT",
+                "category": "MISSING_COMPONENT",  # Updated from OVERCURRENT to match Pydantic Enum
                 "title": "Missing Series Current-Limiting Resistor",
                 "explanation": "An LED is connected without a series current-limiting resistor. Connecting an LED directly across power rails will cause excessive current draw, destroying the LED or overloading the power supply.",
                 "severity": "DANGER",
@@ -56,7 +56,7 @@ def evaluate_electrical_rules(parsed_payload: Dict[str, Any]) -> Dict[str, Any]:
         if not already_reported:
             hazards.append({
                 "hazard_id": "HZ_MISSING_DECOUPLING",
-                "category": "POWER_STABILITY",
+                "category": "MISSING_COMPONENT",  # Updated from POWER_STABILITY to match Pydantic Enum
                 "title": "Missing Decoupling Capacitor",
                 "explanation": "Integrated circuit detected without a bypass/decoupling capacitor near its power supply pins.",
                 "severity": "WARNING",

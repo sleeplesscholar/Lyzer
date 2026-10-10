@@ -36,4 +36,8 @@ CRITICAL RESPONSE CONSTRAINTS:
 1. Limit 'components_detected' to at most 6 essential electronic components per circuit.
 2. Keep 'location_description' brief and concise (10 words maximum per component).
 3. Round bounding box floats to 2 decimal places (e.g., {{"ymin": 0.52, "xmin": 0.40, "ymax": 0.61, "xmax": 0.49}}).
+
+CRITICAL OUTPUT FORMATTING RULES:
+1. Return strictly valid, single-line JSON with NO markdown code fences.
+2. Do NOT insert literal newline characters inside string property values (e.g., keep 'summary' strictly on a single line).
 """

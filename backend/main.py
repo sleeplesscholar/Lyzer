@@ -11,7 +11,13 @@ import ollama
 
 from schemas.output_format import CircuitAnalysisResponse
 from prompts.circuit_rules import SYSTEM_PROMPT
-from prompts.few_shot_examples import RESISTOR_IMG, LED_IMG
+from prompts.few_shot_examples import (
+    RESISTOR_IMG,
+    LED_IMG,
+    ELECTROLYTIC_CAP_IMG,
+    CERAMIC_CAP_IMG,
+    POTENTIOMETER_IMG,
+)
 from services.safety_rules import evaluate_electrical_rules
 
 # Set up logging for server-side error tracking
@@ -41,9 +47,10 @@ ALLOWED_MIME_TYPES = {"image/jpeg", "image/png", "image/webp"}
 ollama_client = ollama.AsyncClient()
 
 
-async def validate_image_file(image: UploadFile) -> bytes:
+async def validate_and_process_image(image: UploadFile, max_dimension: int = 1024) -> bytes:
     """
-    Validates uploaded image MIME type, payload size, and image integrity.
+    Validates uploaded image MIME type/size, downscales dimensions to prevent VRAM OOM,
+    and returns optimized JPEG bytes for Ollama.
     """
     if image.content_type not in ALLOWED_MIME_TYPES:
         raise HTTPException(
@@ -68,10 +75,14 @@ async def validate_image_file(image: UploadFile) -> bytes:
         pil_image = Image.open(io.BytesIO(contents))
         pil_image.verify()
         
+        # Re-open after verify() to process pixels
         pil_image = Image.open(io.BytesIO(contents)).convert("RGB")
         
+        # Resize image proportionally if larger than max_dimension to keep vision context light
+        pil_image.thumbnail((max_dimension, max_dimension), Image.Resampling.LANCZOS)
+        
         img_byte_arr = io.BytesIO()
-        pil_image.save(img_byte_arr, format="JPEG")
+        pil_image.save(img_byte_arr, format="JPEG", quality=85)
         return img_byte_arr.getvalue()
 
     except UnidentifiedImageError:
@@ -173,7 +184,7 @@ def sanitize_model_payload(parsed_data: Dict[str, Any]) -> Dict[str, Any]:
     if "recommendations" not in parsed_data or not isinstance(parsed_data["recommendations"], list):
         parsed_data["recommendations"] = []
 
-    # 5. Correct top-level topology hallucinations (e.g., non-existent transistors)
+    # 5. Correct top-level topology hallucinations
     detected_names = [
         c.get("name", "").lower() 
         for c in parsed_data.get("components_detected", []) 
@@ -202,8 +213,8 @@ async def analyze_circuit(
     image: UploadFile = File(...),
     description: str = Form(default="Check this circuit setup for safety and wiring issues.")
 ):
-    # 1. Execute Input Validation
-    image_bytes = await validate_image_file(image)
+    # 1. Execute Input Validation & Thumbnail Resizing
+    image_bytes = await validate_and_process_image(image, max_dimension=1024)
     cleaned_description = sanitize_description(description)
 
     # 2. Build Multimodal Conversation Payload with Reference Grounding
@@ -211,30 +222,17 @@ async def analyze_circuit(
         {"role": "system", "content": SYSTEM_PROMPT}
     ]
 
+    # Include reference images conditionally if available
     if RESISTOR_IMG:
         messages.extend([
-            {
-                "role": "user",
-                "content": "Reference Example A: This visual pattern (axial cylinder, wire leads, color bands) is a Resistor.",
-                "images": [RESISTOR_IMG]
-            },
-            {
-                "role": "assistant",
-                "content": "Acknowledged. I will recognize axial bodies with color bands as Resistors."
-            }
+            {"role": "user", "content": "Reference Example: Resistor (axial cylinder, color bands).", "images": [RESISTOR_IMG]},
+            {"role": "assistant", "content": "Acknowledged."}
         ])
 
     if LED_IMG:
         messages.extend([
-            {
-                "role": "user",
-                "content": "Reference Example B: This visual pattern (colored plastic dome with two leads) is an LED.",
-                "images": [LED_IMG]
-            },
-            {
-                "role": "assistant",
-                "content": "Acknowledged. I will recognize colored plastic domes as LEDs."
-            }
+            {"role": "user", "content": "Reference Example: LED (colored dome lens).", "images": [LED_IMG]},
+            {"role": "assistant", "content": "Acknowledged."}
         ])
 
     messages.append({
@@ -250,7 +248,8 @@ async def analyze_circuit(
             messages=messages,
             format="json",
             options={
-                "num_predict": 3072,  # Increased token budget to prevent early truncation
+                "num_predict": 2048,  # Cap token length to prevent VRAM buffer overflow
+                "num_ctx": 4096,      # Context window limit
                 "temperature": 0.2,
             }
         )
@@ -272,10 +271,10 @@ async def analyze_circuit(
     try:
         raw_content = response.get("message", {}).get("content", "")
         if not raw_content or not raw_content.strip():
-            logger.error("Ollama returned an empty response string.")
+            logger.error(f"Ollama returned an empty response string. Full response dict: {response}")
             raise HTTPException(
                 status_code=status.HTTP_502_BAD_GATEWAY,
-                detail="Model returned an empty response. Ensure Ollama daemon is active."
+                detail="Model returned an empty response string. Ensure Ollama daemon has sufficient VRAM."
             )
 
         raw_json = raw_content.strip()
@@ -322,11 +321,8 @@ async def verify_schematic_against_breadboard(
     breadboard_image: UploadFile = File(...),
     description: str = Form(default="Verify if the physical breadboard setup matches the schematic diagram.")
 ):
-    """
-    Cross-checks a physical breadboard setup against a reference schematic diagram.
-    """
-    schematic_bytes = await validate_image_file(schematic_image)
-    breadboard_bytes = await validate_image_file(breadboard_image)
+    schematic_bytes = await validate_and_process_image(schematic_image, max_dimension=1024)
+    breadboard_bytes = await validate_and_process_image(breadboard_image, max_dimension=1024)
     cleaned_description = sanitize_description(description)
 
     messages: List[Dict[str, Any]] = [
@@ -344,7 +340,8 @@ async def verify_schematic_against_breadboard(
             messages=messages,
             format="json",
             options={
-                "num_predict": 3072,
+                "num_predict": 2048,
+                "num_ctx": 4096,
                 "temperature": 0.2,
             }
         )

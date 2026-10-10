@@ -208,7 +208,7 @@
             const removeImgBtn = document.getElementById("remove-image");
 
             let selectedFile = null;
-            const API_URL = "http://127.0.0.1:8000/api/analyze";
+            const API_URL = "https://purplish-smoked-reggae.ngrok-free.dev/api/analyze";
 
             // Handle image selection preview
             fileInput.addEventListener("change", (e) => {
@@ -256,15 +256,17 @@
                     if (fileToSend) {
                         formData.append("image", fileToSend);
                     } else {
-                        // Fallback empty blob if user sent text without image (or handle error)
                         throw new Error("Please upload a circuit image to analyze.");
                     }
                     formData.append("description", userText || "Check this circuit setup for safety and wiring issues.");
 
-                    // 4. Send request to FastAPI backend
+                    // 4. Send request to FastAPI backend with ngrok bypass header
                     const response = await fetch(API_URL, {
                         method: "POST",
-                        body: formData // Browser automatically manages multipart boundaries
+                        headers: {
+                            "ngrok-skip-browser-warning": "true"
+                        },
+                        body: formData
                     });
 
                     removeMessage(typingId);

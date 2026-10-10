@@ -15,11 +15,12 @@ LED_IMG = load_reference_image("test_led.jpg")
 ELECTROLYTIC_CAP_IMG = load_reference_image("test_electrolytic_capacitor.jpg")
 CERAMIC_CAP_IMG = load_reference_image("test_ceramic_capacitor.jpg")
 POTENTIOMETER_IMG = load_reference_image("test_potentiometer.jpg")
+MULTIMETER_IMG = load_reference_image("test_multimeter.jpg")
 
 FEW_SHOT_EXAMPLES = """
 ### DISCRETE BREADBOARD COMPONENT IDENTIFICATION EXAMPLES:
 
-Use these rigorous reference patterns to distinguish between similarly shaped components on breadboard tie-points:
+Use these rigorous reference patterns to distinguish between similarly shaped components on breadboard tie-points and test equipment:
 
 1. **Resistor**: Small, opaque, cylindrical body (typically beige, light blue, or grey) featuring four or five distinct color-code bands and two axial wire leads extending straight from the ends.
 - Example name: "Resistor" or "Current-Limiting Resistor"
@@ -55,6 +56,10 @@ Use these rigorous reference patterns to distinguish between similarly shaped co
 
 9. **Jumper Wires**: Flexible, insulated solid-core or stranded wires bridging two breadboard tie-points, components, or power rails.
 - Example name: "Jumper Wire"
+
+10. **Multimeter**: Large, handheld or benchtop electronic measurement instrument characterized by a massive handheld plastic chassis (dwarf-like in scale compared to tiny breadboard components), featuring a prominent rectangular digital LCD screen at the top, a large central rotary selection dial, and thick, insulated flexible test probe leads plugged into bottom ports.
+- Example name: "Digital Multimeter" or "Multimeter"
+- Key differentiator: Vastly larger physical dimensions than any breadboard component (occupying a major portion of the frame context), featuring a display screen, central mode knob, and heavy multi-color probe wires.
 
 ---
 
@@ -102,6 +107,13 @@ Use these rigorous reference patterns to distinguish between similarly shaped co
     "location_description": "8-pin DIP package straddling center divider channel",
     "bounding_box": {"ymin": 0.35, "xmin": 0.40, "ymax": 0.55, "xmax": 0.60},
     "confidence": 0.85
+  },
+  {
+    "component_id": "MM1",
+    "name": "Multimeter",
+    "location_description": "Handheld digital multimeter positioned alongside the breadboard with probes connected to circuit rails",
+    "bounding_box": {"ymin": 0.05, "xmin": 0.65, "ymax": 0.95, "xmax": 0.98},
+    "confidence": 0.96
   }
 ]
 """

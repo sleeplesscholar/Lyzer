@@ -196,8 +196,7 @@
         </div>
     </main>
 
-    <!-- Mock Frontend Logic Script -->
-    <script>
+   <script>
         document.addEventListener("DOMContentLoaded", () => {
             const chatForm = document.getElementById("chat-form");
             const chatMessages = document.getElementById("chat-messages");
@@ -209,6 +208,7 @@
             const removeImgBtn = document.getElementById("remove-image");
 
             let selectedFile = null;
+            const API_URL = "http://127.0.0.1:8000/api/analyze";
 
             // Handle image selection preview
             fileInput.addEventListener("change", (e) => {
@@ -227,33 +227,62 @@
                 previewContainer.style.display = "none";
             });
 
-            // Handle submission with mock UI response
-            chatForm.addEventListener("submit", (e) => {
+            // Handle real backend submission
+            chatForm.addEventListener("submit", async (e) => {
                 e.preventDefault();
                 const userText = textInput.value.trim();
                 if (!userText && !selectedFile) return;
 
-                // Append user message
-                appendMessage(userText, selectedFile ? imagePreview.src : null, "user");
+                // 1. Capture file reference before resetting state
+                const fileToSend = selectedFile;
+                const previewSrc = selectedFile ? imagePreview.src : null;
 
-                // Clear input and preview
+                // Append user message to chat stream
+                appendMessage(userText || "Analyze this circuit setup.", previewSrc, "user");
+
+                // Clear inputs and hide preview bar
                 textInput.value = "";
-                const hasFile = selectedFile !== null;
                 selectedFile = null;
                 fileInput.value = "";
                 previewContainer.style.display = "none";
 
-                // Simulate typing response
+                // 2. Show typing indicator while waiting for local LLM inference
                 const typingId = appendTypingIndicator();
                 chatMessages.scrollTop = chatMessages.scrollHeight;
 
-                setTimeout(() => {
+                try {
+                    // 3. Construct Multipart Form Data Payload
+                    const formData = new FormData();
+                    if (fileToSend) {
+                        formData.append("image", fileToSend);
+                    } else {
+                        // Fallback empty blob if user sent text without image (or handle error)
+                        throw new Error("Please upload a circuit image to analyze.");
+                    }
+                    formData.append("description", userText || "Check this circuit setup for safety and wiring issues.");
+
+                    // 4. Send request to FastAPI backend
+                    const response = await fetch(API_URL, {
+                        method: "POST",
+                        body: formData // Browser automatically manages multipart boundaries
+                    });
+
                     removeMessage(typingId);
-                    const mockReply = hasFile 
-                        ? "✨ [Mock Analysis] Image received successfully! Detected components: 1x Resistor, 1x LED. Circuit appears stable."
-                        : "I've noted your message. Please attach a circuit photo so I can inspect the layout.";
-                    appendMessage(mockReply, null, "assistant");
-                }, 1200);
+
+                    if (!response.ok) {
+                        const errData = await response.json().catch(() => ({}));
+                        throw new Error(errData.detail || `Server error: ${response.status}`);
+                    }
+
+                    const analysisResult = await response.json();
+                    
+                    // 5. Render structured analysis response in chat
+                    appendAnalysisCard(analysisResult);
+
+                } catch (error) {
+                    removeMessage(typingId);
+                    appendMessage(`❌ Analysis Failed: ${error.message}`, null, "assistant error");
+                }
             });
 
             function appendMessage(text, imgSrc, sender) {
@@ -263,7 +292,7 @@
                 if (imgSrc) {
                     const img = document.createElement("img");
                     img.src = imgSrc;
-                    img.style.cssText = "max-width: 220px; max-height: 160px; object-fit: cover; border-radius: 8px;";
+                    img.style.cssText = "max-width: 220px; max-height: 160px; object-fit: cover; border-radius: 8px; margin-bottom: 6px;";
                     div.appendChild(img);
                 }
 
@@ -278,13 +307,71 @@
                 chatMessages.scrollTop = chatMessages.scrollHeight;
             }
 
+            function appendAnalysisCard(data) {
+                const div = document.createElement("div");
+                div.className = "message assistant";
+                div.style.maxWidth = "90%";
+
+                // Safety badge color coding
+                let badgeColor = "#2ed573"; // Safe green
+                if (data.overall_safety === "WARNING") badgeColor = "#ffa500";
+                if (data.overall_safety === "DANGER") badgeColor = "#ff4d4d";
+
+                let htmlContent = `
+                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
+                        <strong style="font-size: 1.05rem;">${data.circuit_type}</strong>
+                        <span style="background: ${badgeColor}; color: white; padding: 2px 8px; border-radius: 4px; font-size: 0.75rem; font-weight: bold;">
+                            ${data.overall_safety}
+                        </span>
+                    </div>
+                    <p style="margin: 0 0 10px 0; font-size: 0.9rem; color: #444;">${data.summary}</p>
+                `;
+
+                // Detected Components List
+                if (data.components_detected && data.components_detected.length > 0) {
+                    htmlContent += `<div style="margin-top: 8px; font-size: 0.85rem; border-top: 1px solid var(--line); padding-top: 6px;">
+                        <strong>Components Detected:</strong>
+                        <ul style="margin: 4px 0 0 16px; padding: 0;">`;
+                    data.components_detected.forEach(comp => {
+                        htmlContent += `<li><strong>[${comp.component_id}]</strong> ${comp.name} (${(comp.confidence * 100).toFixed(0)}%) - <span style="color:var(--muted);">${comp.location_description}</span></li>`;
+                    });
+                    htmlContent += `</ul></div>`;
+                }
+
+                // Hazards / Violations
+                if (data.hazards_and_violations && data.hazards_and_violations.length > 0) {
+                    htmlContent += `<div style="margin-top: 8px; font-size: 0.85rem; border-top: 1px solid var(--line); padding-top: 6px; color: #d32f2f;">
+                        <strong>⚠️ Hazards Detected:</strong>
+                        <ul style="margin: 4px 0 0 16px; padding: 0;">`;
+                    data.hazards_and_violations.forEach(hazard => {
+                        htmlContent += `<li><strong>${hazard.title}:</strong> ${hazard.explanation}</li>`;
+                    });
+                    htmlContent += `</ul></div>`;
+                }
+
+                // Recommendations
+                if (data.recommendations && data.recommendations.length > 0) {
+                    htmlContent += `<div style="margin-top: 8px; font-size: 0.85rem; border-top: 1px solid var(--line); padding-top: 6px;">
+                        <strong>💡 Recommendations:</strong>
+                        <ul style="margin: 4px 0 0 16px; padding: 0;">`;
+                    data.recommendations.forEach(rec => {
+                        htmlContent += `<li>${rec}</li>`;
+                    });
+                    htmlContent += `</ul></div>`;
+                }
+
+                div.innerHTML = htmlContent;
+                chatMessages.appendChild(div);
+                chatMessages.scrollTop = chatMessages.scrollHeight;
+            }
+
             function appendTypingIndicator() {
                 const id = "typing-" + Date.now();
                 const div = document.createElement("div");
                 div.id = id;
                 div.className = "message assistant";
                 div.style.color = "var(--muted)";
-                div.textContent = "lyZer AI is analyzing your input...";
+                div.textContent = "lyZer AI is inspecting circuit layout and running safety rules...";
                 chatMessages.appendChild(div);
                 return id;
             }

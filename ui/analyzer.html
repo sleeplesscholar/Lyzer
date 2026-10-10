@@ -1,0 +1,299 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Circuit Analyzer | lyZer</title>
+    <link rel="stylesheet" href="style.css">
+    <style>
+        /* Standalone Analyzer Chat Page Specific Styles */
+        .analyzer-page-container {
+            max-width: 800px;
+            margin: 30px auto;
+            height: calc(100vh - 160px);
+            display: flex;
+            flex-direction: column;
+            background: var(--panel, #fffefb);
+            border: 1px solid var(--line);
+            border-radius: 20px;
+            box-shadow: 0 20px 40px rgba(50, 35, 15, 0.08);
+            overflow: hidden;
+        }
+
+        .chat-header {
+            padding: 18px 24px;
+            border-bottom: 1px solid var(--line);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            background: rgba(255, 241, 191, 0.3);
+        }
+
+        .chat-header-left {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .status-indicator {
+            width: 10px;
+            height: 10px;
+            border-radius: 50%;
+            background: var(--accent-strong);
+        }
+
+        .chat-messages {
+            flex: 1;
+            padding: 24px;
+            overflow-y: auto;
+            display: flex;
+            flex-direction: column;
+            gap: 16px;
+            background: var(--bg);
+        }
+
+        .message {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+            padding: 14px 18px;
+            border-radius: 14px;
+            max-width: 85%;
+            font-size: 0.95rem;
+            line-height: 1.5;
+        }
+
+        .message.assistant {
+            margin-right: auto;
+            background: var(--panel);
+            border: 1px solid var(--line);
+        }
+
+        .message.user {
+            margin-left: auto;
+            background: var(--accent);
+            color: var(--text);
+        }
+
+        .preview-bar {
+            display: none;
+            padding: 12px 24px;
+            background: rgba(0, 0, 0, 0.02);
+            border-top: 1px solid var(--line);
+            align-items: center;
+            gap: 12px;
+        }
+
+        .preview-thumbnail {
+            width: 45px;
+            height: 45px;
+            object-fit: cover;
+            border-radius: 8px;
+            border: 1px solid var(--line);
+        }
+
+        .chat-input-form {
+            padding: 16px 24px;
+            border-top: 1px solid var(--line);
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            background: var(--panel);
+        }
+
+        .upload-trigger-label {
+            cursor: pointer;
+            padding: 10px;
+            border-radius: 10px;
+            border: 1px solid var(--line);
+            background: var(--bg);
+            display: grid;
+            place-items: center;
+            transition: background 0.2s;
+        }
+
+        .upload-trigger-label:hover {
+            background: var(--accent-soft);
+        }
+
+        .chat-text-input {
+            flex: 1;
+            padding: 12px 16px;
+            border: 1px solid var(--line);
+            border-radius: 10px;
+            background: var(--bg);
+            font-family: inherit;
+            font-size: 0.95rem;
+            outline: none;
+        }
+
+        .chat-text-input:focus {
+            border-color: var(--accent-strong);
+        }
+    </style>
+</head>
+<body>
+
+    <!-- Header & Navigation -->
+    <header>
+        <div class="shell">
+            <nav>
+                <a class="brand" href="index.html">
+                    <span class="logo"><img src="logo.png" alt=""></span>
+                    lyZer<span style="color:var(--accent)">.</span>
+                </a>
+                <div class="nav-links">
+                    <a href="about-us.html">About us</a>
+                    <a href="contact-us.html">Contact us</a>
+                    <a href="index.html#forum">Discussion forum</a>
+                    <a class="nav-button" href="analyzer.html">Open analyzer ↗</a>
+                </div>
+            </nav>
+        </div>
+    </header>
+
+    <!-- Main Chat Analyzer View -->
+    <main class="shell">
+        <div class="analyzer-page-container">
+            
+            <!-- Chat Header -->
+            <div class="chat-header">
+                <div class="chat-header-left">
+                    <span class="status-indicator"></span>
+                    <h2 style="margin: 0; font-size: 1.1rem;">lyZer Circuit Assistant</h2>
+                </div>
+                <a href="index.html" style="font-size: 0.9rem; color: var(--muted); text-decoration: none;">&larr; Back to Home</a>
+            </div>
+
+            <!-- Chat Messages Container -->
+            <div id="chat-messages" class="chat-messages">
+                <div class="message assistant">
+                    👋 Hello! Upload a photo of your circuit or schematic, and let me know if you have any questions or notes about it. I'll help you analyze your layout!
+                </div>
+            </div>
+
+            <!-- Image Preview Area -->
+            <div id="preview-container" class="preview-bar">
+                <img id="image-preview" src="" alt="Preview" class="preview-thumbnail">
+                <span id="file-name" style="font-size: 0.88rem; color: var(--muted); flex: 1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;"></span>
+                <button id="remove-image" style="background: none; border: none; color: #c62828; cursor: pointer; font-size: 0.88rem; font-weight: 700;">Remove</button>
+            </div>
+
+            <!-- Chat Input Form -->
+            <form id="chat-form" class="chat-input-form">
+                <label for="chat-file-input" class="upload-trigger-label" title="Upload circuit image">
+                    📷
+                    <input type="file" id="chat-file-input" accept="image/jpeg, image/png, image/webp" style="display: none;">
+                </label>
+
+                <input type="text" id="chat-text-input" class="chat-text-input" placeholder="Ask about your circuit or add notes...">
+
+                <button type="submit" class="button primary" style="padding: 0 20px; min-height: 44px; border: none; cursor: pointer; font-size: 0.95rem;">
+                    Send ↗
+                </button>
+            </form>
+
+        </div>
+    </main>
+
+    <!-- Mock Frontend Logic Script -->
+    <script>
+        document.addEventListener("DOMContentLoaded", () => {
+            const chatForm = document.getElementById("chat-form");
+            const chatMessages = document.getElementById("chat-messages");
+            const fileInput = document.getElementById("chat-file-input");
+            const textInput = document.getElementById("chat-text-input");
+            const previewContainer = document.getElementById("preview-container");
+            const imagePreview = document.getElementById("image-preview");
+            const fileNameSpan = document.getElementById("file-name");
+            const removeImgBtn = document.getElementById("remove-image");
+
+            let selectedFile = null;
+
+            // Handle image selection preview
+            fileInput.addEventListener("change", (e) => {
+                if (e.target.files && e.target.files[0]) {
+                    selectedFile = e.target.files[0];
+                    imagePreview.src = URL.createObjectURL(selectedFile);
+                    fileNameSpan.textContent = selectedFile.name;
+                    previewContainer.style.display = "flex";
+                }
+            });
+
+            // Remove selected image preview
+            removeImgBtn.addEventListener("click", () => {
+                selectedFile = null;
+                fileInput.value = "";
+                previewContainer.style.display = "none";
+            });
+
+            // Handle submission with mock UI response
+            chatForm.addEventListener("submit", (e) => {
+                e.preventDefault();
+                const userText = textInput.value.trim();
+                if (!userText && !selectedFile) return;
+
+                // Append user message
+                appendMessage(userText, selectedFile ? imagePreview.src : null, "user");
+
+                // Clear input and preview
+                textInput.value = "";
+                const hasFile = selectedFile !== null;
+                selectedFile = null;
+                fileInput.value = "";
+                previewContainer.style.display = "none";
+
+                // Simulate typing response
+                const typingId = appendTypingIndicator();
+                chatMessages.scrollTop = chatMessages.scrollHeight;
+
+                setTimeout(() => {
+                    removeMessage(typingId);
+                    const mockReply = hasFile 
+                        ? "✨ [Mock Analysis] Image received successfully! Detected components: 1x Resistor, 1x LED. Circuit appears stable."
+                        : "I've noted your message. Please attach a circuit photo so I can inspect the layout.";
+                    appendMessage(mockReply, null, "assistant");
+                }, 1200);
+            });
+
+            function appendMessage(text, imgSrc, sender) {
+                const div = document.createElement("div");
+                div.className = `message ${sender}`;
+
+                if (imgSrc) {
+                    const img = document.createElement("img");
+                    img.src = imgSrc;
+                    img.style.cssText = "max-width: 220px; max-height: 160px; object-fit: cover; border-radius: 8px;";
+                    div.appendChild(img);
+                }
+
+                if (text) {
+                    const p = document.createElement("p");
+                    p.style.margin = "0";
+                    p.textContent = text;
+                    div.appendChild(p);
+                }
+
+                chatMessages.appendChild(div);
+                chatMessages.scrollTop = chatMessages.scrollHeight;
+            }
+
+            function appendTypingIndicator() {
+                const id = "typing-" + Date.now();
+                const div = document.createElement("div");
+                div.id = id;
+                div.className = "message assistant";
+                div.style.color = "var(--muted)";
+                div.textContent = "lyZer AI is analyzing your input...";
+                chatMessages.appendChild(div);
+                return id;
+            }
+
+            function removeMessage(id) {
+                const el = document.getElementById(id);
+                if (el) el.remove();
+            }
+        });
+    </script>
+</body>
+</html>

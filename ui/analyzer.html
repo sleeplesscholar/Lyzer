@@ -212,7 +212,7 @@
             
             // Conversation history array to maintain context for text follow-ups
             let conversationHistory = [
-                { role: "system", content: "You are lyZer, an expert electrical engineering assistant helping users inspect and troubleshoot circuits." }
+                { role: "system", content: "You are lyZer, an expert electrical engineering assistant helping users inspect and troubleshoot circuits. Format your text cleanly with bullet points or bold terms where appropriate." }
             ];
 
             // Handle image selection preview
@@ -310,7 +310,7 @@
                         }
 
                         const chatResult = await response.json();
-                        appendMessage(chatResult.reply, null, "assistant");
+                        appendFormattedMessage(chatResult.reply, "assistant");
 
                         // Save assistant reply to memory
                         conversationHistory.push({ role: "assistant", content: chatResult.reply });
@@ -339,6 +339,30 @@
                     p.textContent = text;
                     div.appendChild(p);
                 }
+
+                chatMessages.appendChild(div);
+                chatMessages.scrollTop = chatMessages.scrollHeight;
+            }
+
+            // Formats LLM markdown output into clean HTML for text chat bubbles
+            function appendFormattedMessage(text, sender) {
+                const div = document.createElement("div");
+                div.className = `message ${sender}`;
+
+                let formattedHTML = text
+                    .replace(/&/g, "&amp;")
+                    .replace(/</g, "&lt;")
+                    .replace(/>/g, "&gt;")
+                    .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
+                    .replace(/^[\*\-]\s+(.*)$/gm, '<li style="margin-left: 16px; margin-bottom: 4px;">$1</li>')
+                    .replace(/\n/g, '<br>');
+
+                formattedHTML = formattedHTML.replace(/(<li.*?>.*?<\/li>)+/g, '<ul style="margin: 6px 0; padding: 0;">$&</ul>');
+
+                const contentDiv = document.createElement("div");
+                contentDiv.style.lineHeight = "1.5";
+                contentDiv.innerHTML = formattedHTML;
+                div.appendChild(contentDiv);
 
                 chatMessages.appendChild(div);
                 chatMessages.scrollTop = chatMessages.scrollHeight;

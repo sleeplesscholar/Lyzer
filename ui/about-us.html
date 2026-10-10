@@ -1,0 +1,233 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>About Us | lyZer</title>
+
+    <link rel="stylesheet" href="style.css">
+    <link rel="stylesheet" href="about-us.css">
+</head>
+<body>
+
+	<header>
+		<div class="shell">
+			<nav aria-label="Main navigation">
+				<a class="brand" href="../index.html" aria-label="lyZer home">
+					<span class="logo" aria-hidden="true"><img src="logo.png"></span>
+					lyZer<span style="color:var(--accent)">.</span>
+				</a>
+				<div class="nav-links">
+					<a href="#about">About us</a>
+					<a href="contact-us.html">Contact us</a>
+					<a href="#forum">Discussion forum</a>
+					<a class="nav-button" href="#analyzer">Open analyzer ↗</a>
+				</div>
+			</nav>
+		</div>
+	</header>
+
+    <main class="about-page shell">
+
+        <!-- Hero section -->
+        <section class="about-hero">
+            <div class="hero-content">
+                <p class="eyebrow">ABOUT LYZER</p>
+
+                <h1>Understand circuits.<br>
+                    <span>Think beyond the connections.</span>
+                </h1>
+
+                <p class="hero-description">
+                    lyZer is a circuit analysis project built to make
+                    understanding electrical circuits more approachable.
+                    We bring learning and practical analysis together
+                    in one place.
+                </p>
+
+                <div class="hero-actions">
+                    <a class="button-link primary-button"
+                       href="../index.html">
+                        Explore lyZer
+                    </a>
+
+                    <a class="button-link secondary-button"
+                       href="contact-us.html">
+                        Get in touch
+                    </a>
+                </div>
+            </div>
+
+            <div class="hero-visual">
+                <div class="visual-glow"></div>
+
+                <div class="circuit-card">
+                    <div class="circuit-card-header">
+                        <span class="status-dot"></span>
+                        <span>CIRCUIT ANALYSIS</span>
+                    </div>
+
+                    <svg class="circuit-diagram"
+                         viewBox="0 0 360 230"
+                         xmlns="http://www.w3.org/2000/svg"
+                         role="img"
+                         aria-label="Illustration of a simple electrical circuit with a battery, resistor, and connecting wires">
+
+                        <!-- Connecting wires -->
+                        <path d="M65 65 H140
+                                 M190 65 H295
+                                 V175 H65
+                                 V65"
+                              class="wire"/>
+
+                        <!-- Battery -->
+                        <path d="M65 105 V125
+                                 M48 110 H82
+                                 M54 123 H76"
+                              class="component"/>
+
+                        <!-- Resistor -->
+                        <path d="M140 65
+                                 L148 52
+                                 L160 78
+                                 L172 52
+                                 L184 78
+                                 L190 65"
+                              class="component"/>
+
+                        <!-- Current direction -->
+                        <path d="M225 175 H270"
+                              class="current-line"/>
+
+                        <path d="M261 168 L270 175 L261 182"
+                              class="current-arrow"/>
+
+                        <!-- Connection nodes -->
+                        <circle cx="65" cy="65" r="5" class="node"/>
+                        <circle cx="295" cy="65" r="5" class="node"/>
+                        <circle cx="295" cy="175" r="5" class="node"/>
+                        <circle cx="65" cy="175" r="5" class="node"/>
+
+                        <!-- Labels -->
+                        <text x="164" y="38" class="diagram-label">R</text>
+                        <text x="35" y="145" class="diagram-label">V</text>
+                        <text x="235" y="158" class="diagram-label">I</text>
+                    </svg>
+
+                    <div class="circuit-card-footer">
+                        <span>Learn</span>
+                        <span class="footer-separator">/</span>
+                        <span>Analyze</span>
+                        <span class="footer-separator">/</span>
+                        <span>Understand</span>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Mission section -->
+        <section class="mission-section">
+            <div class="section-heading">
+                <p class="eyebrow">OUR PURPOSE</p>
+                <h2>Making circuit analysis more approachable.</h2>
+            </div>
+
+            <p class="mission-description">
+                Electrical circuits can feel complicated when equations
+                and theory seem disconnected from practical applications.
+                lyZer aims to help bridge that gap by bringing circuit
+                analysis into a more accessible digital experience.
+                Our goal is to support curiosity, strengthen understanding,
+                and encourage users to approach problems with confidence.
+            </p>
+        </section>
+
+        <!-- Values / approach -->
+        <section class="approach-section">
+            <div class="section-heading">
+                <p class="eyebrow">THE LYZER APPROACH</p>
+                <h2>Built around understanding.</h2>
+                <p>
+                    We believe circuit analysis should be more than
+                    getting an answer. It should help you understand
+                    how and why a circuit behaves the way it does.
+                </p>
+            </div>
+
+            <div class="approach-grid">
+
+                <article class="approach-card">
+                    <div class="card-icon">01</div>
+                    <h3>Learn the concepts</h3>
+                    <p>
+                        Build a stronger foundation in circuit theory
+                        and understand the principles behind electrical
+                        relationships.
+                    </p>
+                </article>
+
+                <article class="approach-card">
+                    <div class="card-icon">02</div>
+                    <h3>Analyze with purpose</h3>
+                    <p>
+                        Approach circuit problems systematically and
+                        use analysis to investigate electrical quantities
+                        and relationships.
+                    </p>
+                </article>
+
+                <article class="approach-card">
+                    <div class="card-icon">03</div>
+                    <h3>Connect theory to practice</h3>
+                    <p>
+                        Apply what you learn to practical engineering
+                        questions and develop a clearer understanding
+                        of real circuit behavior.
+                    </p>
+                </article>
+
+            </div>
+        </section>
+
+        <!-- Closing call to action -->
+        <section class="about-cta">
+            <div>
+                <p class="eyebrow">LET'S CONNECT</p>
+                <h2>Curious about lyZer?</h2>
+                <p>
+                    Whether you have a question, an idea, or feedback
+                    to share, we'd love to hear from you.
+                </p>
+            </div>
+
+            <a class="button-link primary-button"
+               href="contact-us.html">
+                Contact us
+            </a>
+        </section>
+
+    </main>
+
+    <footer class="site-footer">
+        <div class="footer-inner">
+            <a class="brand" href="../index.html">lyZer</a>
+
+            <p>
+                Making circuit analysis easier to understand.
+            </p>
+
+            <div class="footer-links">
+                <a href="about-us.html">About Us</a>
+                <a href="contact-us.html">Contact</a>
+                <a href="../index.html#forum">Forum</a>
+            </div>
+
+            <p class="copyright">
+                &copy; 2026 lyZer. All rights reserved.
+            </p>
+        </div>
+    </footer>
+
+</body>
+</html>

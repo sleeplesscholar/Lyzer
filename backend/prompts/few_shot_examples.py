@@ -28,7 +28,7 @@ Use these rigorous reference patterns to distinguish between similarly shaped co
 
 2. **LED (Light Emitting Diode)**: Small 3mm or 5mm component featuring a distinct, translucent or semi-clear plastic dome lens (showing internal anvil/post electrodes) paired with two axial wire leads (anode is longer).
 - Example name: "LED" or "Indicator LED"
-- Key differentiator: Translucent/glassy plastic dome with visible internal metal anvil posts. Determine color ONLY from the plastic dome lens itself, never from test leads. If color is ambiguous, use "LED".
+- Key differentiator: Translucent/glassy plastic dome with visible internal metal anvil posts. Determine color ONLY from the plastic dome lens itself, never from test leads. If color is ambiguous, use "LED". **Crucial Note**: Recognizable even when connected standalone without a resistor; never misidentify a standalone LED as a capacitor or cylindrical can.
 
 3. **Electrolytic Capacitor**: Cylindrical metal or wrapped plastic can (typically black, blue, or silver) with a clearly marked vertical stripe and minus (-) symbols indicating the negative lead, standing vertically or lying horizontally.
 - Example name: "Electrolytic Capacitor"
@@ -76,7 +76,7 @@ Use these rigorous reference patterns to distinguish between similarly shaped co
   {
     "component_id": "LED1",
     "name": "LED",
-    "location_description": "Plugged into terminal row 15 near resistor anode",
+    "location_description": "Connected directly across power module rails without a resistor",
     "bounding_box": {"ymin": 0.48, "xmin": 0.45, "ymax": 0.58, "xmax": 0.52},
     "confidence": 0.91
   },

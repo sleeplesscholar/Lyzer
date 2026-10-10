@@ -1,0 +1,498 @@
+
+/*ABOUT PAGE*/
+
+.about-page {
+    padding-top: 56px;
+    padding-bottom: 72px;
+}
+
+/*HERO SECTION*/
+
+.about-hero {
+    display: grid;
+    grid-template-columns: 1.1fr 0.9fr;
+    align-items: center;
+    gap: 48px;
+
+    padding: 48px 0 72px;
+}
+
+.hero-content {
+    max-width: 620px;
+}
+
+.eyebrow {
+    margin: 0 0 14px;
+
+    color: var(--accent-strong, #f58b2d);
+
+    font-size: 0.78rem;
+    font-weight: 800;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+}
+
+.hero-content h1 {
+    margin: 0;
+
+    color: var(--text, #201a17);
+
+    font-size: clamp(2.4rem, 5vw, 4.2rem);
+    line-height: 1.1;
+    letter-spacing: -0.055em;
+}
+
+.hero-content h1 span {
+    color: var(--accent-strong, #f58b2d);
+}
+
+.hero-description {
+    max-width: 540px;
+    margin: 24px 0 0;
+
+    color: var(--muted, #62564d);
+
+    font-size: 1.05rem;
+    line-height: 1.85;
+}
+
+.hero-actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 12px;
+
+    margin-top: 30px;
+}
+
+/*Shared button appearance for this page*/
+
+.button-link {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+
+    min-height: 46px;
+    padding: 12px 20px;
+
+    border: 1px solid transparent;
+    border-radius: 12px;
+
+    font-size: 0.94rem;
+    font-weight: 700;
+    text-decoration: none;
+
+    transition:
+        transform 0.2s ease,
+        background-color 0.2s ease,
+        box-shadow 0.2s ease;
+}
+
+.button-link:hover {
+    transform: translateY(-2px);
+}
+
+.primary-button {
+    background: var(--accent, #f8c74e);
+    color: var(--text, #201a17);
+
+    box-shadow: 0 6px 18px rgba(118, 96, 54, 0.10);
+}
+
+.primary-button:hover {
+    background: var(--accent-strong, #f58b2d);
+    box-shadow: 0 8px 22px rgba(118, 96, 54, 0.16);
+}
+
+.secondary-button {
+    border-color: var(--line, rgba(118, 96, 54, 0.16));
+
+    background: var(--panel, #fffefb);
+    color: var(--text, #201a17);
+}
+
+.secondary-button:hover {
+    background: var(--accent-soft, #fff1bf);
+}
+
+/*CIRCUIT ILLUSTRATION*/
+
+.hero-visual {
+    position: relative;
+
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    min-height: 360px;
+    padding: 20px;
+}
+
+.visual-glow {
+    position: absolute;
+    inset: 12%;
+
+    border-radius: 50%;
+    background: var(--accent-soft, #fff1bf);
+
+    filter: blur(35px);
+    opacity: 0.75;
+}
+
+.circuit-card {
+    position: relative;
+    z-index: 1;
+
+    width: 100%;
+    max-width: 410px;
+    padding: 24px;
+
+    border: 1px solid var(--line, rgba(118, 96, 54, 0.16));
+    border-radius: 24px;
+
+    background: var(--panel, #fffefb);
+
+    box-shadow: 0 20px 55px rgba(50, 35, 15, 0.09);
+}
+
+.circuit-card-header {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+
+    color: var(--muted, #62564d);
+
+    font-size: 0.72rem;
+    font-weight: 800;
+    letter-spacing: 0.1em;
+}
+
+.status-dot {
+    width: 9px;
+    height: 9px;
+
+    border-radius: 50%;
+    background: var(--accent-strong, #f58b2d);
+}
+
+.circuit-diagram {
+    display: block;
+
+    width: 100%;
+    height: auto;
+    margin: 18px 0;
+}
+
+.wire {
+    fill: none;
+    stroke: #b9a98a;
+    stroke-width: 3;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+}
+
+.component {
+    fill: none;
+    stroke: var(--accent-strong, #f58b2d);
+    stroke-width: 3.5;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+}
+
+.current-line {
+    fill: none;
+    stroke: var(--accent-strong, #f58b2d);
+    stroke-width: 2.5;
+    stroke-linecap: round;
+}
+
+.current-arrow {
+    fill: none;
+    stroke: var(--accent-strong, #f58b2d);
+    stroke-width: 2.5;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+}
+
+.node {
+    fill: var(--accent, #f8c74e);
+}
+
+.diagram-label {
+    fill: var(--text, #201a17);
+
+    font-size: 15px;
+    font-weight: 700;
+    text-anchor: middle;
+}
+
+.circuit-card-footer {
+    display: flex;
+    justify-content: center;
+    flex-wrap: wrap;
+    gap: 10px;
+
+    padding-top: 16px;
+    border-top: 1px solid var(--line, rgba(118, 96, 54, 0.16));
+
+    color: var(--muted, #62564d);
+
+    font-size: 0.78rem;
+    font-weight: 600;
+}
+
+.footer-separator {
+    color: var(--accent-strong, #f58b2d);
+}
+
+/*MISSION SECTION*/
+
+.mission-section {
+    display: grid;
+    grid-template-columns: 0.9fr 1.1fr;
+    align-items: start;
+    gap: 48px;
+
+    padding: 48px 0;
+
+    border-top: 1px solid var(--line, rgba(118, 96, 54, 0.16));
+    border-bottom: 1px solid var(--line, rgba(118, 96, 54, 0.16));
+}
+
+.section-heading h2 {
+    max-width: 500px;
+    margin: 0;
+
+    color: var(--text, #201a17);
+
+    font-size: clamp(1.8rem, 3vw, 2.6rem);
+    line-height: 1.2;
+    letter-spacing: -0.04em;
+}
+
+.mission-description {
+    margin: 0;
+
+    color: var(--muted, #62564d);
+
+    font-size: 1rem;
+    line-height: 1.9;
+}
+
+/*APPROACH CARDS*/
+
+.approach-section {
+    padding: 76px 0;
+}
+
+.approach-section > .section-heading {
+    max-width: 650px;
+    margin-bottom: 32px;
+}
+
+.approach-section > .section-heading > p:last-child {
+    margin: 16px 0 0;
+
+    color: var(--muted, #62564d);
+    line-height: 1.8;
+}
+
+.approach-grid {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 20px;
+}
+
+.approach-card {
+    padding: 26px;
+
+    border: 1px solid var(--line, rgba(118, 96, 54, 0.16));
+    border-radius: 20px;
+
+    background: var(--panel, #fffefb);
+
+    box-shadow: 0 8px 24px rgba(50, 35, 15, 0.04);
+
+    transition:
+        transform 0.2s ease,
+        box-shadow 0.2s ease,
+        border-color 0.2s ease;
+}
+
+.approach-card:hover {
+    transform: translateY(-4px);
+
+    border-color: rgba(245, 139, 45, 0.35);
+
+    box-shadow: 0 14px 30px rgba(50, 35, 15, 0.08);
+}
+
+.card-icon {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    width: 46px;
+    height: 46px;
+    margin-bottom: 22px;
+
+    border-radius: 14px;
+
+    background: var(--accent-soft, #fff1bf);
+    color: var(--text, #201a17);
+
+    font-size: 0.9rem;
+    font-weight: 800;
+}
+
+.approach-card h3 {
+    margin: 0 0 12px;
+
+    color: var(--text, #201a17);
+
+    font-size: 1.15rem;
+    line-height: 1.4;
+}
+
+.approach-card p {
+    margin: 0;
+
+    color: var(--muted, #62564d);
+
+    font-size: 0.94rem;
+    line-height: 1.8;
+}
+
+/*CLOSING CALL TO ACTION*/
+
+.about-cta {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 28px;
+
+    padding: 34px;
+
+    border: 1px solid var(--line, rgba(118, 96, 54, 0.16));
+    border-radius: 24px;
+
+    background: var(--accent-soft, #fff1bf);
+}
+
+.about-cta .eyebrow {
+    margin-bottom: 10px;
+}
+
+.about-cta h2 {
+    margin: 0;
+
+    color: var(--text, #201a17);
+
+    font-size: clamp(1.7rem, 3vw, 2.3rem);
+    letter-spacing: -0.04em;
+}
+
+.about-cta p:not(.eyebrow) {
+    max-width: 540px;
+    margin: 12px 0 0;
+
+    color: var(--muted, #62564d);
+    line-height: 1.8;
+}
+
+.about-cta .button-link {
+    flex-shrink: 0;
+}
+
+/*RESPONSIVE DESIGN*/
+
+@media (max-width: 850px) {
+    .about-hero {
+        grid-template-columns: 1fr;
+        gap: 24px;
+
+        padding-top: 28px;
+    }
+
+    .hero-content {
+        max-width: 700px;
+    }
+
+    .hero-visual {
+        min-height: 300px;
+    }
+
+    .mission-section {
+        grid-template-columns: 1fr;
+        gap: 22px;
+    }
+
+    .approach-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .approach-card {
+        padding: 24px;
+    }
+}
+
+@media (max-width: 560px) {
+    .about-page {
+        padding-top: 28px;
+        padding-bottom: 44px;
+    }
+
+    .about-hero {
+        padding-bottom: 44px;
+    }
+
+    .hero-content h1 {
+        font-size: clamp(2.2rem, 10vw, 3rem);
+    }
+
+    .hero-description {
+        font-size: 0.98rem;
+    }
+
+    .hero-visual {
+        min-height: 250px;
+        padding: 8px;
+    }
+
+    .circuit-card {
+        padding: 18px;
+        border-radius: 18px;
+    }
+
+    .mission-section {
+        padding: 38px 0;
+    }
+
+    .approach-section {
+        padding: 48px 0;
+    }
+
+    .about-cta {
+        align-items: flex-start;
+        flex-direction: column;
+
+        padding: 26px;
+    }
+
+    .about-cta .button-link {
+        width: 100%;
+    }
+}
+
+/* Respect reduced-motion preferences */
+
+@media (prefers-reduced-motion: reduce) {
+    .button-link,
+    .approach-card {
+        transition: none;
+    }
+
+    .button-link:hover,
+    .approach-card:hover {
+        transform: none;
+    }
+}

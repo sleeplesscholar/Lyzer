@@ -19,36 +19,41 @@ POTENTIOMETER_IMG = load_reference_image("test_potentiometer.jpg")
 FEW_SHOT_EXAMPLES = """
 ### DISCRETE BREADBOARD COMPONENT IDENTIFICATION EXAMPLES:
 
-Use these reference patterns to identify physical components plugged directly into breadboard tie-points:
+Use these rigorous reference patterns to distinguish between similarly shaped components on breadboard tie-points:
 
-1. **Resistor**: Small cylindrical body with four or five color code bands and axial wire leads.
+1. **Resistor**: Small, opaque, cylindrical body (typically beige, light blue, or grey) featuring four or five distinct color-code bands and two axial wire leads extending straight from the ends.
 - Example name: "Resistor" or "Current-Limiting Resistor"
-- Do NOT guess resistance value unless color bands are crisp and unambiguous.
+- Key differentiator: Opaque body with colored rings; do NOT confuse with diodes or ceramic capacitors.
 
-2. **LED (Light Emitting Diode)**: Small 3mm or 5mm clear or colored plastic dome with two leads (anode/cathode).
+2. **LED (Light Emitting Diode)**: Small 3mm or 5mm component featuring a distinct, translucent or semi-clear plastic dome lens (showing internal anvil/post electrodes) paired with two axial wire leads (anode is longer).
 - Example name: "LED" or "Indicator LED"
-- NOTE: Determine color ONLY from the plastic dome lens itself, NEVER from nearby knobs, wire insulation, or test leads. If color is ambiguous, use "LED".
+- Key differentiator: Translucent/glassy plastic dome with visible internal metal anvil posts. Determine color ONLY from the plastic dome lens itself, never from test leads. If color is ambiguous, use "LED".
 
-3. **Electrolytic Capacitor**: Cylindrical metal/plastic can (typically black, blue, or silver) with a distinct vertical stripe indicating the negative (-) lead, standing vertically or lying horizontally.
+3. **Electrolytic Capacitor**: Cylindrical metal or wrapped plastic can (typically black, blue, or silver) with a clearly marked vertical stripe and minus (-) symbols indicating the negative lead, standing vertically or lying horizontally.
 - Example name: "Electrolytic Capacitor"
-- Check orientation and polarity relative to breadboard power rails where visible.
+- Key differentiator: Tall cylindrical can shape with polarity markings; distinct from flat ceramic discs or resistors.
 
-4. **Ceramic Disc Capacitor**: Small, thin, flat yellow/orange disc (or small bulbous coin shape) with two parallel wire leads.
+4. **Ceramic Disc Capacitor**: Small, thin, flat disc (commonly orange, yellow, or brownish-red, sometimes resembling a small bulbous coin) with two parallel wire leads emerging from the bottom.
 - Example name: "Ceramic Capacitor" or "Ceramic Disc Capacitor"
+- Key differentiator: Flat, disc-like or coin-like profile without color bands; distinct from cylindrical resistors or electrolytic caps.
 
-5. **Potentiometer**: Variable resistor with a rotating knob or thumbwheel, typically housed in a blue, black, or metallic casing with 3 terminal pins plugged into adjacent breadboard rows.
+5. **Potentiometer**: Variable resistor featuring a rotating dial, adjustment screw, or thumbwheel mounted on a bulky blue, black, or metallic rectangular casing with 3 terminal pins plugged into adjacent breadboard rows.
 - Example name: "Potentiometer" or "Trimmer Potentiometer"
+- Key differentiator: Mechanical adjustment dial or screw on top of a multi-pin block.
 
-6. **Diode / Zener Diode**: Small black or glass cylinder with a single silver or black cathode band near one end.
+6. **Diode / Zener Diode**: Small, opaque black or clear glass cylinder with a single distinct silver or black cathode band painted near one end.
 - Example name: "Rectifier Diode" or "Signal Diode"
+- Key differentiator: Smaller than a resistor, lacks color-code bands, features a single stripe at one extremity.
 
-7. **Transistor / Voltage Regulator**: Small 3-pin component with a flat front and curved back (TO-92 package) or a metal tab (TO-220 package).
+7. **Transistor / Voltage Regulator**: Small 3-pin component characterized by a flat front face with text markings and a curved back body (TO-92 package) or a metallic mounting tab (TO-220 package).
 - Example name: "NPN Transistor" or "Voltage Regulator"
+- Key differentiator: D-shaped package profile or flat front face with 3 leads.
 
-8. **Integrated Circuit (DIP IC)**: Rectangular black plastic package with pins on two parallel sides straddling the center breadboard divider channel.
+8. **Integrated Circuit (DIP IC)**: Rectangular black plastic package with a semi-circular top notch/dot and rows of parallel pins along both long sides straddling the center breadboard divider channel.
 - Example name: "555 Timer IC" or "Dual Op-Amp IC"
+- Key differentiator: Multi-pin dual-inline rectangular package spanning across the board channel.
 
-9. **Jumper Wires**: Flexible insulated solid-core wires bridging two breadboard tie-points or power rails.
+9. **Jumper Wires**: Flexible, insulated solid-core or stranded wires bridging two breadboard tie-points, components, or power rails.
 - Example name: "Jumper Wire"
 
 ---

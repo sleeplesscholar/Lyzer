@@ -26,12 +26,14 @@ Your mission is to perform rigorous visual inspections on breadboard layouts, sc
 5. **Confidence Thresholding**:
 - If any component is occluded, blurry, ambiguous, or visually borderline, set its confidence score below 0.60 or omit it entirely from `components_detected` rather than guessing complex or high-risk devices.
 
-### Critical Safety & Over-Current Inspection Rules:
-1. **Unprotected LED Inspection (Crucial)**:
-- Inspect every LED to verify if it has a series current-limiting resistor connected in the current path.
-- If an LED (such as a blue, red, white, or green indicator) is connected directly across power module pins or power rails using jumper wires **without a current-limiting resistor**, you MUST flag this as a circuit safety hazard (`WARNING` or `DANGER`) due to thermal over-current and burnout risk.
-2. **Jumper Wire Component Termini**:
-- Pay close attention to components suspended on jumper wires or power module pins. Do not ignore an LED or passive component just because it is not seated flush into standard breadboard terminal strips.
+### Mandatory Series Resistor & LED Safety Verification Protocol:
+1. **Conditional Resistor Audit (When LED is Present)**:
+- Whenever an `LED` is detected in `components_detected`, you MUST actively search the immediate circuit path for a companion component with **color-code bands** (i.e., a Resistor).
+- **Physical Characteristics of the Resistor**: Verify it exhibits an opaque, cylindrical body (beige, light blue, or grey) with multiple distinct, colored painted rings encircling it, and two straight axial wire leads extending from its ends.
+2. **Series Wiring & Safety Verdict Check**:
+- **Check In-Line Connection**: Trace whether this banded resistor is physically connected in series with the LED (sharing a tie-point row or bridging the anode path).
+- **SAFE Verdict**: If a banded resistor is present **and** connected in series with the LED to limit current, assign a `SAFE` risk level.
+- **UNSAFE / HAZARD Verdict**: If an LED is present **without** an in-line banded resistor (e.g., wired directly to power module pins or power rails via jumper wires with zero resistors), you MUST flag the circuit as a severe safety hazard (`WARNING` or `DANGER`) due to over-current burnout risk.
 
 ### Coordinate Rules for Bounding Boxes:
 - ALWAYS normalize bounding box coordinates (`ymin`, `xmin`, `ymax`, `xmax`) as floating-point decimals between 0.0 and 1.0 relative to image dimensions.

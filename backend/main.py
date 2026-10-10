@@ -213,6 +213,19 @@ def sanitize_model_payload(parsed_data: Dict[str, Any]) -> Dict[str, Any]:
     # 6. Apply Deterministic Electrical Safety Engine Rules
     parsed_data = evaluate_electrical_rules(parsed_data)
 
+    # ========================================================================
+    # HARD OVERRIDE: Force DANGER if critical hazards or power kills exist
+    # ========================================================================
+    has_danger_hazards = any(
+        h.get("severity", "").upper() == "DANGER" 
+        for h in parsed_data.get("hazards_and_violations", [])
+        if isinstance(h, dict)
+    )
+    requires_kill = parsed_data.get("telemetry", {}).get("requires_power_kill", False)
+
+    if has_danger_hazards or requires_kill:
+        parsed_data["overall_safety"] = "DANGER"
+
     return parsed_data
 
 
@@ -248,9 +261,17 @@ async def analyze_circuit(
             {"role": "assistant", "content": "Acknowledged."}
         ])
 
+    # ------------------------------------------------------------------------
+    # ENHANCED PROMPT WRAPPER
+    # Forces an exhaustive visual audit so generic prompts don't skip resistors.
+    # ------------------------------------------------------------------------
+    enhanced_content = f"""User Circuit Notes: {cleaned_description}
+
+[MANDATORY AUDIT INSTRUCTION: Perform a meticulous, exhaustive component-by-component scan of every terminal strip row and power rail. Before evaluating any active components or LEDs, you MUST explicitly inspect and verify whether a banded cylindrical resistor is present in series. Look closely for painted color-code bands around axial components.]"""
+
     messages.append({
         "role": "user",
-        "content": f"User Circuit Notes: {cleaned_description}",
+        "content": enhanced_content,
         "images": [image_bytes]
     })
 

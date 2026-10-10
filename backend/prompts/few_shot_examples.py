@@ -22,9 +22,9 @@ FEW_SHOT_EXAMPLES = """
 
 Use these rigorous reference patterns to distinguish between similarly shaped components on breadboard tie-points and test equipment:
 
-1. **Resistor**: Small, opaque, cylindrical body (typically beige, light blue, or grey) featuring four or five distinct color-code bands and two axial wire leads extending straight from the ends.
+1. **Resistor (CRITICAL TARGET)**: Small, opaque, cylindrical body (typically beige, light blue, or grey) encircled by **3 to 5 distinct, highly visible painted color bands** (black, brown, red, orange, yellow, green, blue, violet, grey, white, gold, silver) with two thin wire leads sticking straight out of the ends.
 - Example name: "Resistor" or "Current-Limiting Resistor"
-- Key differentiator: Opaque body with colored rings; do NOT confuse with diodes or ceramic capacitors.
+- Key identifier: Look explicitly for the striped bands around the cylinder. Never skip or ignore a banded resistor when an LED is present in the frame; do NOT confuse with diodes or ceramic capacitors.
 
 2. **LED (Light Emitting Diode)**: Small 3mm or 5mm component featuring a distinct, translucent or semi-clear plastic dome lens (showing internal anvil/post electrodes) paired with two axial wire leads (anode is longer).
 - Example name: "LED" or "Indicator LED"
@@ -69,9 +69,9 @@ Use these rigorous reference patterns to distinguish between similarly shaped co
   {
     "component_id": "R1",
     "name": "Resistor",
-    "location_description": "Connected across row 15 between terminal strip and power rail",
-    "bounding_box": {"ymin": 0.42, "xmin": 0.38, "ymax": 0.52, "xmax": 0.46},
-    "confidence": 0.88
+    "location_description": "Banded cylindrical resistor connected in series with the LED anode",
+    "bounding_box": {"ymin": 0.42, "xmin": 0.30, "ymax": 0.52, "xmax": 0.40},
+    "confidence": 0.95
   },
   {
     "component_id": "LED1",

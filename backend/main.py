@@ -8,6 +8,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from PIL import Image, UnidentifiedImageError
 from json_repair import repair_json
 import ollama
+from pydantic import BaseModel
 
 from schemas.output_format import CircuitAnalysisResponse
 from prompts.circuit_rules import SYSTEM_PROMPT
@@ -45,6 +46,18 @@ ALLOWED_MIME_TYPES = {"image/jpeg", "image/png", "image/webp"}
 
 # Initialize asynchronous Ollama client
 ollama_client = ollama.AsyncClient()
+
+
+# ------------------------------------------------------------------------
+# Chat Models for Multi-Turn Text Follow-Ups
+# ------------------------------------------------------------------------
+class ChatMessage(BaseModel):
+    role: str
+    content: str
+
+class ChatRequest(BaseModel):
+    messages: List[ChatMessage]
+    description: str
 
 
 async def validate_and_process_image(image: UploadFile, max_dimension: int = 1024) -> bytes:
@@ -312,6 +325,37 @@ async def analyze_circuit(
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail=f"Schema mapping error: {str(e)}"
+        )
+
+
+@app.post("/api/chat")
+async def chat_with_assistant(chat_payload: ChatRequest):
+    """
+    Handles text-only follow-up questions maintaining conversation context.
+    """
+    formatted_messages = [{"role": msg.role, "content": msg.content} for msg in chat_payload.messages]
+    
+    # Append the latest user query
+    formatted_messages.append({"role": "user", "content": chat_payload.description})
+
+    try:
+        response = await ollama_client.chat(
+            model=MODEL_NAME,
+            messages=formatted_messages,
+            options={
+                "num_predict": 1024,
+                "temperature": 0.3,
+            }
+        )
+        
+        reply_content = response.get("message", {}).get("content", "I couldn't generate a response.")
+        return {"reply": reply_content}
+
+    except Exception as e:
+        logger.error(f"Chat error: {str(e)}")
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="Error communicating with AI model for chat."
         )
 
 

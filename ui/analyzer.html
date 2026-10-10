@@ -208,7 +208,12 @@
             const removeImgBtn = document.getElementById("remove-image");
 
             let selectedFile = null;
-            const API_URL = "https://purplish-smoked-reggae.ngrok-free.dev/api/analyze";
+            const BASE_URL = "https://purplish-smoked-reggae.ngrok-free.dev";
+            
+            // Conversation history array to maintain context for text follow-ups
+            let conversationHistory = [
+                { role: "system", content: "You are lyZer, an expert electrical engineering assistant helping users inspect and troubleshoot circuits." }
+            ];
 
             // Handle image selection preview
             fileInput.addEventListener("change", (e) => {
@@ -227,18 +232,20 @@
                 previewContainer.style.display = "none";
             });
 
-            // Handle real backend submission
+            // Handle real backend submission (Dual route: Image Analysis vs Text Chat)
             chatForm.addEventListener("submit", async (e) => {
                 e.preventDefault();
                 const userText = textInput.value.trim();
                 if (!userText && !selectedFile) return;
 
-                // 1. Capture file reference before resetting state
                 const fileToSend = selectedFile;
                 const previewSrc = selectedFile ? imagePreview.src : null;
 
-                // Append user message to chat stream
+                // Append user message to UI stream
                 appendMessage(userText || "Analyze this circuit setup.", previewSrc, "user");
+
+                // Push message to conversation history state
+                conversationHistory.push({ role: "user", content: userText || "Analyze this circuit image." });
 
                 // Clear inputs and hide preview bar
                 textInput.value = "";
@@ -246,44 +253,72 @@
                 fileInput.value = "";
                 previewContainer.style.display = "none";
 
-                // 2. Show typing indicator while waiting for local LLM inference
+                // Show typing indicator while waiting for local inference
                 const typingId = appendTypingIndicator();
                 chatMessages.scrollTop = chatMessages.scrollHeight;
 
                 try {
-                    // 3. Construct Multipart Form Data Payload
-                    const formData = new FormData();
                     if (fileToSend) {
+                        // ROUTE 1: Multipart Image Analysis (`/api/analyze`)
+                        const formData = new FormData();
                         formData.append("image", fileToSend);
+                        formData.append("description", userText || "Check this circuit setup for safety and wiring issues.");
+
+                        const response = await fetch(`${BASE_URL}/api/analyze`, {
+                            method: "POST",
+                            headers: {
+                                "ngrok-skip-browser-warning": "true"
+                            },
+                            body: formData
+                        });
+
+                        removeMessage(typingId);
+
+                        if (!response.ok) {
+                            const errData = await response.json().catch(() => ({}));
+                            throw new Error(errData.detail || `Server error: ${response.status}`);
+                        }
+
+                        const analysisResult = await response.json();
+                        appendAnalysisCard(analysisResult);
+
+                        // Save assistant summary to memory
+                        conversationHistory.push({ 
+                            role: "assistant", 
+                            content: `Circuit Type: ${analysisResult.circuit_type}. Summary: ${analysisResult.summary}` 
+                        });
+
                     } else {
-                        throw new Error("Please upload a circuit image to analyze.");
+                        // ROUTE 2: Text-Only Follow-Up Chat (`/api/chat`)
+                        const response = await fetch(`${BASE_URL}/api/chat`, {
+                            method: "POST",
+                            headers: {
+                                "Content-Type": "application/json",
+                                "ngrok-skip-browser-warning": "true"
+                            },
+                            body: JSON.stringify({
+                                messages: conversationHistory.slice(0, -1), // Prior messages
+                                description: userText
+                            })
+                        });
+
+                        removeMessage(typingId);
+
+                        if (!response.ok) {
+                            const errData = await response.json().catch(() => ({}));
+                            throw new Error(errData.detail || `Server error: ${response.status}`);
+                        }
+
+                        const chatResult = await response.json();
+                        appendMessage(chatResult.reply, null, "assistant");
+
+                        // Save assistant reply to memory
+                        conversationHistory.push({ role: "assistant", content: chatResult.reply });
                     }
-                    formData.append("description", userText || "Check this circuit setup for safety and wiring issues.");
-
-                    // 4. Send request to FastAPI backend with ngrok bypass header
-                    const response = await fetch(API_URL, {
-                        method: "POST",
-                        headers: {
-                            "ngrok-skip-browser-warning": "true"
-                        },
-                        body: formData
-                    });
-
-                    removeMessage(typingId);
-
-                    if (!response.ok) {
-                        const errData = await response.json().catch(() => ({}));
-                        throw new Error(errData.detail || `Server error: ${response.status}`);
-                    }
-
-                    const analysisResult = await response.json();
-                    
-                    // 5. Render structured analysis response in chat
-                    appendAnalysisCard(analysisResult);
 
                 } catch (error) {
                     removeMessage(typingId);
-                    appendMessage(`❌ Analysis Failed: ${error.message}`, null, "assistant error");
+                    appendMessage(`❌ Request Failed: ${error.message}`, null, "assistant error");
                 }
             });
 
@@ -314,8 +349,7 @@
                 div.className = "message assistant";
                 div.style.maxWidth = "90%";
 
-                // Safety badge color coding
-                let badgeColor = "#2ed573"; // Safe green
+                let badgeColor = "#2ed573";
                 if (data.overall_safety === "WARNING") badgeColor = "#ffa500";
                 if (data.overall_safety === "DANGER") badgeColor = "#ff4d4d";
 
@@ -329,7 +363,6 @@
                     <p style="margin: 0 0 10px 0; font-size: 0.9rem; color: #444;">${data.summary}</p>
                 `;
 
-                // Detected Components List
                 if (data.components_detected && data.components_detected.length > 0) {
                     htmlContent += `<div style="margin-top: 8px; font-size: 0.85rem; border-top: 1px solid var(--line); padding-top: 6px;">
                         <strong>Components Detected:</strong>
@@ -340,7 +373,6 @@
                     htmlContent += `</ul></div>`;
                 }
 
-                // Hazards / Violations
                 if (data.hazards_and_violations && data.hazards_and_violations.length > 0) {
                     htmlContent += `<div style="margin-top: 8px; font-size: 0.85rem; border-top: 1px solid var(--line); padding-top: 6px; color: #d32f2f;">
                         <strong>⚠️ Hazards Detected:</strong>
@@ -351,7 +383,6 @@
                     htmlContent += `</ul></div>`;
                 }
 
-                // Recommendations
                 if (data.recommendations && data.recommendations.length > 0) {
                     htmlContent += `<div style="margin-top: 8px; font-size: 0.85rem; border-top: 1px solid var(--line); padding-top: 6px;">
                         <strong>💡 Recommendations:</strong>
@@ -373,7 +404,7 @@
                 div.id = id;
                 div.className = "message assistant";
                 div.style.color = "var(--muted)";
-                div.textContent = "lyZer AI is inspecting circuit layout and running safety rules...";
+                div.textContent = "lyZer AI is processing your request...";
                 chatMessages.appendChild(div);
                 return id;
             }

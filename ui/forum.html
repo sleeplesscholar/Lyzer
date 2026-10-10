@@ -1,0 +1,357 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <title>Discussion Forum | lyZer</title>
+
+    <link rel="stylesheet" href="style.css">
+    <link rel="stylesheet" href="forum.css">
+</head>
+<body>
+
+	<header>
+		<div class="shell">
+			<nav aria-label="Main navigation">
+				<a class="brand" href="../index.html" aria-label="lyZer home">
+					<span class="logo" aria-hidden="true"><img src="logo.png"></span>
+					lyZer<span style="color:var(--accent)">.</span>
+				</a>
+				<div class="nav-links">
+					<a href="about-us.html">About us</a>
+					<a href="contact-us.html">Contact us</a>
+					<a href="forum.html">Discussion forum</a>
+					<a class="nav-button" href="analyzer.html">Open analyzer ↗</a>
+				</div>
+			</nav>
+		</div>
+	</header>
+
+    <main class="forum-page shell">
+
+        <section class="forum-intro">
+            <p class="eyebrow">LYZER COMMUNITY</p>
+            <h1>Let's talk <span>circuits.</span></h1>
+            <p>
+                Ask questions, share ideas, and discuss everything
+                from circuit theory to practical electrical problems.
+            </p>
+        </section>
+
+        <!-- Add a comment section -->
+        <section class="post-section">
+            <div class="section-title">
+                <div>
+                    <p class="eyebrow">JOIN THE CONVERSATION</p>
+                    <h2>Start a discussion</h2>
+                </div>
+
+                <span class="post-icon">+</span>
+            </div>
+
+            <form id="comment-form" class="comment-form">
+
+                <div class="form-row">
+                    <div class="form-field">
+                        <label for="user-name">Your name</label>
+                        <input
+                            type="text"
+                            id="user-name"
+                            placeholder="e.g. Alex"
+                            maxlength="40"
+                            required
+                        >
+                    </div>
+
+                    <div class="form-field">
+                        <label for="comment-topic">Topic</label>
+                        <select id="comment-topic" required>
+                            <option value="General">General</option>
+                            <option value="Circuit Theory">Circuit Theory</option>
+                            <option value="Circuit Analysis">Circuit Analysis</option>
+                            <option value="Components">Components</option>
+                            <option value="Help Needed">Help Needed</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div class="form-field">
+                    <label for="comment-title">Discussion title</label>
+                    <input
+                        type="text"
+                        id="comment-title"
+                        placeholder="What would you like to discuss?"
+                        maxlength="100"
+                        required
+                    >
+                </div>
+
+                <div class="form-field">
+                    <label for="comment-text">Your comment</label>
+                    <textarea
+                        id="comment-text"
+                        placeholder="Share your question, idea, or explanation..."
+                        rows="4"
+                        maxlength="1000"
+                        required
+                    ></textarea>
+                </div>
+
+                <div class="form-footer">
+                    <p>Your comment will appear below.</p>
+                    <button type="submit" class="post-button">
+                        Post Comment
+                    </button>
+                </div>
+
+                <p id="form-message" class="form-message"></p>
+            </form>
+        </section>
+
+        <!-- Discussion list -->
+        <section class="discussions-section">
+
+            <div class="discussions-heading">
+                <div>
+                    <p class="eyebrow">COMMUNITY DISCUSSIONS</p>
+                    <h2>Recent discussions</h2>
+                </div>
+
+                <span id="discussion-count" class="discussion-count">
+                    4 discussions
+                </span>
+            </div>
+
+            <div id="discussion-list" class="discussion-list">
+
+                <!-- Sample discussion 1 -->
+                <article class="discussion-card">
+                    <div class="discussion-top">
+                        <div class="user-info">
+                            <div class="avatar">AS</div>
+                            <div>
+                                <h3>Alex Sharma</h3>
+                                <p class="post-date">Sample discussion</p>
+                            </div>
+                        </div>
+
+                        <span class="topic-tag">Circuit Theory</span>
+                    </div>
+
+                    <h4>Why do we use Kirchhoff's laws?</h4>
+
+                    <p class="discussion-text">
+                        I understand the basic equations, but when should
+                        we use Kirchhoff's Current Law and when should we
+                        use Kirchhoff's Voltage Law to solve a circuit?
+                    </p>
+
+                    <div class="discussion-footer">
+                        <span>💬 Sample post</span>
+                    </div>
+                </article>
+
+                <!-- Sample discussion 2 -->
+                <article class="discussion-card">
+                    <div class="discussion-top">
+                        <div class="user-info">
+                            <div class="avatar avatar-orange">RM</div>
+                            <div>
+                                <h3>Riya Mishra</h3>
+                                <p class="post-date">Sample discussion</p>
+                            </div>
+                        </div>
+
+                        <span class="topic-tag">Components</span>
+                    </div>
+
+                    <h4>Resistors in series vs. parallel</h4>
+
+                    <p class="discussion-text">
+                        Is there an easy way to remember how voltage
+                        and current behave in series and parallel
+                        resistor circuits?
+                    </p>
+
+                    <div class="discussion-footer">
+                        <span>💬 Sample post</span>
+                    </div>
+                </article>
+
+                <!-- Sample discussion 3 -->
+                <article class="discussion-card">
+                    <div class="discussion-top">
+                        <div class="user-info">
+                            <div class="avatar avatar-brown">NK</div>
+                            <div>
+                                <h3>Nischal Karki</h3>
+                                <p class="post-date">Sample discussion</p>
+                            </div>
+                        </div>
+
+                        <span class="topic-tag">Circuit Analysis</span>
+                    </div>
+
+                    <h4>Mesh analysis or nodal analysis?</h4>
+
+                    <p class="discussion-text">
+                        Which method do you usually find easier for
+                        solving complex circuits? Are there cases
+                        where one method is clearly better than the other?
+                    </p>
+
+                    <div class="discussion-footer">
+                        <span>💬 Sample post</span>
+                    </div>
+                </article>
+
+                <!-- Sample discussion 4 -->
+                <article class="discussion-card">
+                    <div class="discussion-top">
+                        <div class="user-info">
+                            <div class="avatar avatar-green">SP</div>
+                            <div>
+                                <h3>Samir Pandey</h3>
+                                <p class="post-date">Sample discussion</p>
+                            </div>
+                        </div>
+
+                        <span class="topic-tag">Help Needed</span>
+                    </div>
+
+                    <h4>How do I start analyzing an unfamiliar circuit?</h4>
+
+                    <p class="discussion-text">
+                        When a circuit has several sources and components,
+                        I sometimes don't know where to begin. What steps
+                        do you follow before writing the equations?
+                    </p>
+
+                    <div class="discussion-footer">
+                        <span>💬 Sample post</span>
+                    </div>
+                </article>
+
+            </div>
+        </section>
+
+    </main>
+
+    <!-- Footer -->
+    <footer class="site-footer">
+        <div class="footer-inner">
+            <a class="brand" href="../index.html">lyZer</a>
+
+            <p>Making circuit analysis easier to understand.</p>
+
+            <div class="footer-links">
+                <a href="about-us.html">About Us</a>
+                <a href="contact-us.html">Contact</a>
+                <a href="forum.html">Forum</a>
+            </div>
+
+            <p class="copyright">
+                &copy; 2026 lyZer. All rights reserved.
+            </p>
+        </div>
+    </footer>
+
+    <!-- Simple client-side interaction -->
+    <script>
+        const commentForm = document.getElementById("comment-form");
+        const discussionList = document.getElementById("discussion-list");
+        const discussionCount = document.getElementById("discussion-count");
+        const formMessage = document.getElementById("form-message");
+
+        function updateDiscussionCount() {
+            const count = discussionList.querySelectorAll(
+                ".discussion-card"
+            ).length;
+
+            discussionCount.textContent =
+                count + (count === 1 ? " discussion" : " discussions");
+        }
+
+        commentForm.addEventListener("submit", function (event) {
+            event.preventDefault();
+
+            const name = document.getElementById("user-name").value.trim();
+            const topic = document.getElementById("comment-topic").value;
+            const title = document.getElementById("comment-title").value.trim();
+            const comment = document.getElementById("comment-text").value.trim();
+
+            if (!name || !title || !comment) {
+                formMessage.textContent = "Please fill in all the fields.";
+                return;
+            }
+
+            // Create a new discussion card.
+            const card = document.createElement("article");
+            card.className = "discussion-card";
+
+            const top = document.createElement("div");
+            top.className = "discussion-top";
+
+            const userInfo = document.createElement("div");
+            userInfo.className = "user-info";
+
+            const avatar = document.createElement("div");
+            avatar.className = "avatar";
+
+            avatar.textContent = name
+                .split(/\s+/)
+                .slice(0, 2)
+                .map(part => part.charAt(0).toUpperCase())
+                .join("");
+
+            const userDetails = document.createElement("div");
+
+            const userHeading = document.createElement("h3");
+            userHeading.textContent = name;
+
+            const date = document.createElement("p");
+            date.className = "post-date";
+            date.textContent = "Just now";
+
+            userDetails.append(userHeading, date);
+            userInfo.append(avatar, userDetails);
+
+            const topicTag = document.createElement("span");
+            topicTag.className = "topic-tag";
+            topicTag.textContent = topic;
+
+            top.append(userInfo, topicTag);
+
+            const heading = document.createElement("h4");
+            heading.textContent = title;
+
+            const text = document.createElement("p");
+            text.className = "discussion-text";
+            text.textContent = comment;
+
+            const footer = document.createElement("div");
+            footer.className = "discussion-footer";
+            footer.textContent = "💬 Community post";
+
+            card.append(top, heading, text, footer);
+
+            // Show the newest discussion first.
+            discussionList.prepend(card);
+
+            updateDiscussionCount();
+
+            commentForm.reset();
+            formMessage.textContent = "Your comment has been added!";
+
+            card.scrollIntoView({
+                behavior: "smooth",
+                block: "center"
+            });
+        });
+
+        updateDiscussionCount();
+    </script>
+
+</body>
+</html>

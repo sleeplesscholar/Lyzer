@@ -2,11 +2,11 @@ import requests
 import json
 
 URL = "http://127.0.0.1:8000/api/analyze"
-IMAGE_PATH = "tests/sample_circuits/test1.jpg"  # Path to your test image
+IMAGE_PATH = "tests/sample_circuits/test2_err.jpg"  # Path to your test image
 
 with open(IMAGE_PATH, "rb") as img_file:
     files = {"image": ("test_breadboard.jpg", img_file, "image/jpeg")}
-    data = {"description": "Check this breadboard circuit setup."}
+    data = {"description": "Check this breadboard circuit setup and ignore the black ink spot."}
     
     print(f"[+] Sending payload to {URL}...")
     response = requests.post(URL, files=files, data=data)
